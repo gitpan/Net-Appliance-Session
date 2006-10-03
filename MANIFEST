@@ -1,0 +1,15 @@
+lib/Net/Appliance/Session/Exceptions.pm
+lib/Net/Appliance/Session/Transport/SSH.pm
+lib/Net/Appliance/Session/Transport.pm
+lib/Net/Appliance/Session/Engine.pm
+lib/Net/Appliance/Session.pm
+Changes
+INSTALL
+Makefile.PL
+MANIFEST
+META.yml
+README
+TODO
+t/10-use.t
+t/pod.t
+t/pod-coverage.t

@@ -1,0 +1,4 @@
+* Make Engine like Transport, where there is a base class and tailored
+  implementations. This would cope with Cisco, Juniper (goes straight to
+  enable?), etc.
+* Look into Serial transport method, but will this also need Engine support?
