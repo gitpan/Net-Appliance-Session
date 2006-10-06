@@ -3,6 +3,7 @@ lib/Net/Appliance/Session/Transport/SSH.pm
 lib/Net/Appliance/Session/Transport.pm
 lib/Net/Appliance/Session/Engine.pm
 lib/Net/Appliance/Session.pm
+examples/example-1.pl
 Changes
 INSTALL
 Makefile.PL

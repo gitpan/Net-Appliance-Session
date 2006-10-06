@@ -17,7 +17,7 @@ WriteMakefile(
         'Class::Accessor' => 0.25,
         'Net::Appliance::Phrasebook' => 0,
     },
-    LICENSE             => 'GPL',
+    LICENSE             => 'GPLv2',
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Net-Appliance-Session-*' },
 );

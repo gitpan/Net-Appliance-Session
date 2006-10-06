@@ -69,6 +69,16 @@ transports. It is effectively a C<< Net::Telnet >> factory, which then calls
 upon a derived class to do something with the guts of the TELNET connection
 (perhaps rip it out and shove an SSH connection in there instead).
 
+=head1 AVAILABLE TRANSPORTS
+
+=over 4
+
+=item *
+
+L<Net::Appliance::Session::Trasnsport::SSH>
+
+=back
+
 =head1 AUTHOR
 
 Oliver Gorwits C<< <oliver.gorwits@oucs.ox.ac.uk> >>

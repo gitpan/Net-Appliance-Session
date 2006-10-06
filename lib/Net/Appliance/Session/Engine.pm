@@ -171,13 +171,27 @@ sub end_configure {
 
     $self->print('exit');
     my (undef, $match) = $self->waitfor($self->prompt)
-        or $self->error('Failed to get prompt after leaving configure mode');
+        or $self->error('Failed to get prompt after exit in configure mode');
 
-    # fairly dumb check to see that we're actually out of configure
-    # and back at a privileged prompt
+    # we didn't manage to escape configure mode (must be nested?)
+    if ($match =~ m/\(config[^)]*\)# ?$/) {
+        my $caller3 = (caller(3))[3];
 
-    $self->error('Failed to leave configure mode')
-        if $match =~ m/\(config\)# ?$/;
+        # max out at three tries to exit configure mode
+        if ( $caller3 and $caller3 =~ m/end_configure$/ ) {
+             $self->error('Failed to leave configure mode');
+        }
+        # try again to exit configure mode
+        else {
+            $self->end_configure;
+        }
+    }
+
+    # return if recursively called
+    my $caller1 = (caller(1))[3];
+    if ( defined $caller1 and $caller1 =~ m/end_configure$/ ) {
+        return;
+    }
 
     $self->in_configure_mode(0);
 
@@ -187,37 +201,4 @@ sub end_configure {
 # ===========================================================================
 
 1;
-
-=head1 NAME
-
-Net::Appliance::Session::Engine
-
-=head1 DESCRIPTION
-
-This package contains the default engine that controls login and switching
-privilege mode on your target appliance. It currently supports Cisco
-equipment, but it's expected that a future version of this distribution will
-factor this into another module, leaving a base class here.
-
-=head1 AUTHOR
-
-Oliver Gorwits C<< <oliver.gorwits@oucs.ox.ac.uk> >>
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (c) The University of Oxford 2006. All Rights Reserved.
-
-This program is free software; you can redistribute it and/or modify it under
-the terms of version 2 of the GNU General Public License as published by the
-Free Software Foundation.
-
-This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
-St, Fifth Floor, Boston, MA 02110-1301 USA
-
-=cut
 

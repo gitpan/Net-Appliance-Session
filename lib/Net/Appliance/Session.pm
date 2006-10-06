@@ -10,7 +10,7 @@ use base qw(
     Class::Accessor::Fast::Contained
 ); # eventually, would Moosify this ?
 
-our $VERSION = 0.05;
+our $VERSION = 0.06;
 
 use Net::Appliance::Session::Exceptions;
 use Net::Appliance::Phrasebook;
@@ -50,9 +50,12 @@ sub new {
     # unrecognized args, so take them out. this also prevents auto-connect
 
     my $tprt = exists $args{Transport} ? delete $args{Transport} : 'SSH';
-    my $plat = exists $args{Platform}  ? delete $args{Platform}  : 'IOS';
-    my $eng  = exists $args{Engine}    ? delete $args{Engine}    : '' ;
-    my $host = exists $args{Host}      ? delete $args{Host}      : '' ;
+    my $host = exists $args{Host}      ? delete $args{Host}      : undef;
+
+    my %pbargs = (); # arguments to Net::Appliance::Phrasebook->load
+    $pbargs{platform} =
+        exists $args{Platform} ? delete $args{Platform} : 'IOS';
+    $pbargs{source} = delete $args{Source} if exists $args{Source};
 
     # load up the transport, which is a wrapper for Net::Telnet
 
@@ -66,7 +69,7 @@ sub new {
 
     # a bit of a double-backflip, but that's what you get for using MI :-}
     $self = $self->Class::Accessor::Fast::Contained::setup({
-        pb => Net::Appliance::Phrasebook->load( platform => $plat )
+        pb => Net::Appliance::Phrasebook->load( %pbargs )
     });
 
     # $self will now respond to Net::Telnet methods, and ->pb->fetch()
@@ -193,7 +196,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-This document refers to version 0.05 of Net::Appliance::Session.
+This document refers to version 0.06 of Net::Appliance::Session.
 
 =head1 SYNOPSIS
 
@@ -216,17 +219,17 @@ This document refers to version 0.05 of Net::Appliance::Session.
 =head1 DESCRIPTION
 
 Use this module to establish an interactive command-line session with a
-network appliance. There is special support for moving into C<< privileged >>
-mode and C<< configure >> mode, with all other commands being sent through a
+network appliance. There is special support for moving into C<privileged>
+mode and C<configure> mode, with all other commands being sent through a
 generic call to your session object.
 
 There are other CPAN modules that cover similar ground, including Net::SSH and
-Net::Telnet::Cisco, but they are quite buggy or do not handle SSH properly.
+Net::Telnet::Cisco, but they are less robust or do not handle SSH properly.
 Objects created by this module are based upon Net::Telnet so the majority of
 your interaction will be with methods in that module. It is recommended that
 you read the Net::Telnet manual page for further details.
 
-In this early release of C<< Net::Appliance::Session >>, only SSH connections
+In this early release of C<Net::Appliance::Session>, only SSH connections
 to Cisco devices are supported, but it is hoped that further trasports (for
 example serial line access) and target device engines (e.g. Juniper) will be
 developed.
@@ -234,12 +237,9 @@ developed.
 =head1 METHODS
 
 Objects created by this module are based upon Net::Telnet so the majority of
-your interaction will be with methods in that module. The following
-Net::Telnet method is documented here for completeness :
+your interaction will be with methods in that module.
 
-=over 4
-
-=item C<< Net::Appliance::Session->new >>
+=head2 C<< Net::Appliance::Session->new >>
 
 Like Net::Telnet you can supply either a single parameter to this method which
 is used for the target device hostname, or a list of named parameters as
@@ -247,21 +247,15 @@ listed in the Net::Telnet documentation. Do not use C<Net::Telnet>'s
 C<Errmode> parameter, because it will be overridden by this module.
 
 The significant difference with this module is that the actual connection to
-the remote device is delayed until you C<< connect() >>.
+the remote device is delayed until you C<connect()>.
 
 Further named arguments to those in Net::Telnet are accepted, to control
-behaviour specific to this module. This is discussed further, below.
+behaviour specific to this module. This is discussed in L</"CONFIGURATION">,
+below.
 
-This method returns a new C<< Net::Appliance::Session >> object.
+This method returns a new C<Net::Appliance::Session> object.
 
-=back
-
-The following methods are provided in addition to those in Net::Telnet and all
-return the current C<< Net::Appliance::Session >> object:
-
-=over 4
-
-=item C<< $s->connect >>
+=head2 C<connect>
 
 When you instantiate a new Net::Appliance::Session object the module does not
 actually establish a connection with the target device. This behaviour is
@@ -269,22 +263,27 @@ slightly different to Net::Telnet and is because the module also needs to have
 login credentials. Use this method to establish that interactive session.
 
 This method requires two arguments: the login username and password. Either
-provide them as a pair of parameters to C<< connect >> in that order, or as a
-list of named parameters using the key names C<< Name >> and C<< Password >>
+provide them as a pair of parameters to C<connect> in that order, or as a
+list of named parameters using the key names C<Name> and C<Password>
 respectively. For example:
 
  $s->connect('username', 'password');
  # or
  $s->connect(Name => 'username', Password => 'password');
 
-In addition to logging in, C<< connect >> will also disable paging in the
+In addition to logging in, C<connect> will also disable paging in the
 output for its interactive session. This means that unlike Net::Telnet::Cisco
 no special page scraping logic is required in this module's code.
 
-=item C<< $s->begin_privileged >>
+It is recommended that the named parameter format is used for passing
+arguments to C<connect>. Each connection I<transport> is implemented by an
+addon module, which may be set up to take additional named parameters. See
+L<Net::Appliance::Session::Transport> for details of available transports.
+
+=head2 C<begin_privileged>
 
 To enter privileged mode on the device use this method. Of course you must be
-connected to the device using the C<< connect >> method, first.
+connected to the device using the C<connect> method, first.
 
 All parameters are optional, and if none are given then the login password
 will be used as the privileged password.
@@ -295,36 +294,36 @@ If two parameters are given then they are assumed to be the privileged
 username and password, respectively.
 
 If more than two parameters are given then they are interepreted as a list of
-named parameters using the key names C<< Name >> and C<< Password >> for the
+named parameters using the key names C<Name> and C<Password> for the
 privileged username and password, respectively.
 
-=item C<< $s->end_privileged >>
+=head2 C<end_privileged>
 
 To leave privileged mode and return to the unpriviledged shell then use this
 method.
 
-=item C<< $s->in_privileged_mode >>
+=head2 C<in_privileged_mode>
 
 This method will return True if your interactive session is currently in
 privileged (or configure) mode, and False if it is not.
 
-=item C<< $s->begin_configure >>
+=head2 C<begin_configure>
 
 In order to enter configure mode, you must first have entered privileged mode,
-using the C<< begin_privileged >> method described above.
+using the C<begin_privileged> method described above.
 
 To enter configure mode on the device use this method.
 
-=item C<< $s->end_configure >>
+=head2 C<end_configure>
 
 To leave configure mode and return to privileged mode the use this method.
 
-=item C<< $s->in_configure_mode >>
+=head2 C<in_configure_mode>
 
 This method will return True if your interactive session is currently in
 configure mode, and False if it is not.
 
-=item C<< $s->cmd >>
+=head2 C<cmd>
 
 Ordinarily, you might use this C<Net::Telnet> method in scalar context to
 observe whether the command was successful on the target appliance. However,
@@ -363,20 +362,18 @@ and C<waitfor()> methods of C<Net::Telnet>, although they are of course still
 available should you want them. The only usable method arguments are
 C<String>, C<Output> and C<Timeout>.
 
-=item C<< $s->close >>
+=head2 C<close>
 
 This C<Net::Telnet> method has been overridden to automatically back
 out of configure and/or privilege mode, as well as re-enable paging mode on
 your behalf, as necessary.
 
-=item C<< $s->error >>
+=head2 C<error>
 
 Rather than following the C<Net::Telnet> documentation, this method now
 creates and throws an exception, setting the field values for you. See
-L</"DIAGNOSTICS"> below for more information, however undor most circumstances
+L</"DIAGNOSTICS"> below for more information, however under most circumstances
 it will be called automatically for you by the overridden C<cmd()> method.
-
-=back
 
 =head1 CONFIGURATION
 
@@ -396,18 +393,20 @@ Net::Appliance::Phrasebook >> module, for the following operating systems:
  FWSM    # currently the same as 'PIXOS'
  FWSM3   # for FWSM Release 3.x devices (slightly different to FWSM 2.x)
 
-To select a phrasebook, pass an optional parameter to the C<< new >>  method
+To select a phrasebook, pass an optional parameter to the C<new> method
 like so:
 
  my $s = Net::Appliance::Session->new(
      Host     => 'hostname.example',
      Platform => 'FWSM3',
+     Source   => '/path/to/file.yml', # optional
  );
 
 If you want to add a new phrasebook, or edit an exiting one, there are two
 options. Either submit a patch to the maintaner of the C<<
 Net::Appliance::Phrasebook >> module, or read the manual page for that module
-to find out how to use a local phrasebook rather than the builtin one.
+to find out how to use a local phrasebook rather than the builtin one via the
+C<Source> parameter.
 
 =head1 DIAGNOSTICS
 
@@ -417,7 +416,7 @@ appliance, then something like the following will probably do what you want:
  $s->input_log(*STDOUT);
 
 All errors returned from Net::Appliance::Session methods are Perl exceptions,
-meaning that in effect C<< die() >> is called and you will need to use C<<
+meaning that in effect C<die()> is called and you will need to use C<<
 eval {} >>. The rationale behind this is that you should have taken care to
 script interactive sessions robustly, and tested them thoroughly, so if a
 prompt is not returned or you supply incorrect parameters then it's an
@@ -439,20 +438,20 @@ so:
  }
  $s->close;
 
-Exceptions belong to the C<< Net::Appliance::Session::Exception >> class if
+Exceptions belong to the C<Net::Appliance::Session::Exception> class if
 they result from errors internal to Net::Telnet such as lack of returned
 prompts, command timeouts, and so on.
 
-Alternatively exceptions will belong to C<< Net::Appliance::Session::Error >>
+Alternatively exceptions will belong to C<Net::Appliance::Session::Error>
 if you have been silly (for example missed a method parameter or tried to
 enter configure mode without having first entered privileged mode).
 
-All exception objects are created from C<< Exception::Class >> and so
+All exception objects are created from C<Exception::Class> and so
 stringify correctly and support methods as described in the manual page for
 that module.
 
-C<< Net::Appliance::Session::Exception >> exception objects have two
-additional methods (a.k.a. fields), C<< errmsg >> and C<< lastline >> which
+C<Net::Appliance::Session::Exception> exception objects have two
+additional methods (a.k.a. fields), C<errmsg> and C<lastline> which
 contain output from Net::Telnet diagnostics.
 
 =head1 INTERNALS
@@ -461,16 +460,12 @@ The guts of this module are pretty tricky, although I would also hope elegant,
 in parts ;-) In particular, the following C<Net::Telnet> method has been
 overridden to modify behaviour:
 
-=over 4
-
-=item C<< Net::Appliance::Session::fhopen >>
+=head2 C<fhopen>
 
 The killer feature in C<Net::Telnet> is that it allows you to swap out the
 builtin I/O target from a standard TELNET connection, to another filehandle of
 your choice. However, it does so in a rather intrusive way to the poor object,
 so this method is overridden to safeguard the instance's private data.
-
-=back
 
 =head1 DEPENDENCIES
 

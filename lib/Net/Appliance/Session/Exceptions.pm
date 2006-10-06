@@ -48,35 +48,3 @@ sub Net::Appliance::Session::Error::full_message {
 
 1;
 
-# ===========================================================================
-
-=head1 NAME
-
-Net::Appliance::Session::Exception
-
-=head1 DESCRIPTION
-
-This package defines the C<< Exception::Class >> derived exceptions that
-support other parts of C<< Net::Appliance::Session >>.
-
-=head1 AUTHOR
-
-Oliver Gorwits C<< <oliver.gorwits@oucs.ox.ac.uk> >>
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (c) The University of Oxford 2006. All Rights Reserved.
-
-This program is free software; you can redistribute it and/or modify it under
-the terms of version 2 of the GNU General Public License as published by the
-Free Software Foundation.
-
-This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
-St, Fifth Floor, Boston, MA 02110-1301 USA
-
-=cut

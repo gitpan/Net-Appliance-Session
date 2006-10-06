@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    This document refers to version 0.05 of Net::Appliance::Session.
+    This document refers to version 0.06 of Net::Appliance::Session.
 
 SYNOPSIS
      use Net::Appliance::Session;
@@ -29,7 +29,7 @@ DESCRIPTION
     generic call to your session object.
 
     There are other CPAN modules that cover similar ground, including
-    Net::SSH and Net::Telnet::Cisco, but they are quite buggy or do not
+    Net::SSH and Net::Telnet::Cisco, but they are less robust or do not
     handle SSH properly. Objects created by this module are based upon
     Net::Telnet so the majority of your interaction will be with methods in
     that module. It is recommended that you read the Net::Telnet manual page
@@ -42,128 +42,128 @@ DESCRIPTION
 
 METHODS
     Objects created by this module are based upon Net::Telnet so the
-    majority of your interaction will be with methods in that module. The
-    following Net::Telnet method is documented here for completeness :
+    majority of your interaction will be with methods in that module.
 
-    "Net::Appliance::Session->new"
-        Like Net::Telnet you can supply either a single parameter to this
-        method which is used for the target device hostname, or a list of
-        named parameters as listed in the Net::Telnet documentation. Do not
-        use "Net::Telnet"'s "Errmode" parameter, because it will be
-        overridden by this module.
+  "Net::Appliance::Session->new"
+    Like Net::Telnet you can supply either a single parameter to this method
+    which is used for the target device hostname, or a list of named
+    parameters as listed in the Net::Telnet documentation. Do not use
+    "Net::Telnet"'s "Errmode" parameter, because it will be overridden by
+    this module.
 
-        The significant difference with this module is that the actual
-        connection to the remote device is delayed until you "connect()".
+    The significant difference with this module is that the actual
+    connection to the remote device is delayed until you "connect()".
 
-        Further named arguments to those in Net::Telnet are accepted, to
-        control behaviour specific to this module. This is discussed
-        further, below.
+    Further named arguments to those in Net::Telnet are accepted, to control
+    behaviour specific to this module. This is discussed in "CONFIGURATION",
+    below.
 
-        This method returns a new "Net::Appliance::Session" object.
+    This method returns a new "Net::Appliance::Session" object.
 
-    The following methods are provided in addition to those in Net::Telnet
-    and all return the current "Net::Appliance::Session" object:
+  "connect"
+    When you instantiate a new Net::Appliance::Session object the module
+    does not actually establish a connection with the target device. This
+    behaviour is slightly different to Net::Telnet and is because the module
+    also needs to have login credentials. Use this method to establish that
+    interactive session.
 
-    "$s->connect"
-        When you instantiate a new Net::Appliance::Session object the module
-        does not actually establish a connection with the target device.
-        This behaviour is slightly different to Net::Telnet and is because
-        the module also needs to have login credentials. Use this method to
-        establish that interactive session.
+    This method requires two arguments: the login username and password.
+    Either provide them as a pair of parameters to "connect" in that order,
+    or as a list of named parameters using the key names "Name" and
+    "Password" respectively. For example:
 
-        This method requires two arguments: the login username and password.
-        Either provide them as a pair of parameters to "connect" in that
-        order, or as a list of named parameters using the key names "Name"
-        and "Password" respectively. For example:
+     $s->connect('username', 'password');
+     # or
+     $s->connect(Name => 'username', Password => 'password');
 
-         $s->connect('username', 'password');
-         # or
-         $s->connect(Name => 'username', Password => 'password');
+    In addition to logging in, "connect" will also disable paging in the
+    output for its interactive session. This means that unlike
+    Net::Telnet::Cisco no special page scraping logic is required in this
+    module's code.
 
-        In addition to logging in, "connect" will also disable paging in the
-        output for its interactive session. This means that unlike
-        Net::Telnet::Cisco no special page scraping logic is required in
-        this module's code.
+    It is recommended that the named parameter format is used for passing
+    arguments to "connect". Each connection *transport* is implemented by an
+    addon module, which may be set up to take additional named parameters.
+    See Net::Appliance::Session::Transport for details of available
+    transports.
 
-    "$s->begin_privileged"
-        To enter privileged mode on the device use this method. Of course
-        you must be connected to the device using the "connect" method,
-        first.
+  "begin_privileged"
+    To enter privileged mode on the device use this method. Of course you
+    must be connected to the device using the "connect" method, first.
 
-        All parameters are optional, and if none are given then the login
-        password will be used as the privileged password.
+    All parameters are optional, and if none are given then the login
+    password will be used as the privileged password.
 
-        If one parameter is given then it is assumed to be the privileged
-        password.
+    If one parameter is given then it is assumed to be the privileged
+    password.
 
-        If two parameters are given then they are assumed to be the
-        privileged username and password, respectively.
+    If two parameters are given then they are assumed to be the privileged
+    username and password, respectively.
 
-        If more than two parameters are given then they are interepreted as
-        a list of named parameters using the key names "Name" and "Password"
-        for the privileged username and password, respectively.
+    If more than two parameters are given then they are interepreted as a
+    list of named parameters using the key names "Name" and "Password" for
+    the privileged username and password, respectively.
 
-    "$s->end_privileged"
-        To leave privileged mode and return to the unpriviledged shell then
-        use this method.
+  "end_privileged"
+    To leave privileged mode and return to the unpriviledged shell then use
+    this method.
 
-    "$s->in_privileged_mode"
-        This method will return True if your interactive session is
-        currently in privileged (or configure) mode, and False if it is not.
+  "in_privileged_mode"
+    This method will return True if your interactive session is currently in
+    privileged (or configure) mode, and False if it is not.
 
-    "$s->begin_configure"
-        In order to enter configure mode, you must first have entered
-        privileged mode, using the "begin_privileged" method described
-        above.
+  "begin_configure"
+    In order to enter configure mode, you must first have entered privileged
+    mode, using the "begin_privileged" method described above.
 
-        To enter configure mode on the device use this method.
+    To enter configure mode on the device use this method.
 
-    "$s->end_configure"
-        To leave configure mode and return to privileged mode the use this
-        method.
+  "end_configure"
+    To leave configure mode and return to privileged mode the use this
+    method.
 
-    "$s->in_configure_mode"
-        This method will return True if your interactive session is
-        currently in configure mode, and False if it is not.
+  "in_configure_mode"
+    This method will return True if your interactive session is currently in
+    configure mode, and False if it is not.
 
-    "$s->cmd"
-        Ordinarily, you might use this "Net::Telnet" method in scalar
-        context to observe whether the command was successful on the target
-        appliance. However, this module's version "die"s if it doesn't think
-        everything went well. See "DIAGNOSTICS" for tips on managing this
-        using an "eval{}" construct.
+  "cmd"
+    Ordinarily, you might use this "Net::Telnet" method in scalar context to
+    observe whether the command was successful on the target appliance.
+    However, this module's version "die"s if it doesn't think everything
+    went well. See "DIAGNOSTICS" for tips on managing this using an "eval{}"
+    construct.
 
-        The following error conditions are checked on your behalf:
+    The following error conditions are checked on your behalf:
 
-        *   Incomplete command output, it was cut short for some reason
+    *   Incomplete command output, it was cut short for some reason
 
-        *   Timeout waiting for command response
+    *   Timeout waiting for command response
 
-        *   EOF or other anomaly received in the command response
+    *   EOF or other anomaly received in the command response
 
-        *   Error message from your appliance in the response
+    *   Error message from your appliance in the response
 
-        If any of these occurs then you will get an exception with
-        apropriately populated fields. Otherwise, in array context this
-        method returns the command response, just as "Net::Telnet" would. In
-        scalar context the object itself returned.
+    If any of these occurs then you will get an exception with apropriately
+    populated fields. Otherwise, in array context this method returns the
+    command response, just as "Net::Telnet" would. In scalar context the
+    object itself returned.
 
-        Being overridden in this way means you should have no need for the
-        "print()" and "waitfor()" methods of "Net::Telnet", although they
-        are of course still available should you want them. The only usable
-        method arguments are "String", "Output" and "Timeout".
+    Being overridden in this way means you should have no need for the
+    "print()" and "waitfor()" methods of "Net::Telnet", although they are of
+    course still available should you want them. The only usable method
+    arguments are "String", "Output" and "Timeout".
 
-    "$s->close"
-        This "Net::Telnet" method has been overridden to automatically back
-        out of configure and/or privilege mode, as well as re-enable paging
-        mode on your behalf, as necessary.
+  "close"
+    This "Net::Telnet" method has been overridden to automatically back out
+    of configure and/or privilege mode, as well as re-enable paging mode on
+    your behalf, as necessary.
 
-    "$s->error"
-        Rather than following the "Net::Telnet" documentation, this method
-        now creates and throws an exception, setting the field values for
-        you. See "DIAGNOSTICS" below for more information, however undor
-        most circumstances it will be called automatically for you by the
-        overridden "cmd()" method.
+  "error"
+    Rather than following the "Net::Telnet" documentation, this method now
+    creates and throws an exception, setting the field values for you. See
+    "DIAGNOSTICS" below for more information, however under most
+    circumstances it will be called automatically for you by the overridden
+    "cmd()" method.
 
 CONFIGURATION
     Occasionally there is a configuration setting that is implemented
@@ -189,13 +189,14 @@ CONFIGURATION
      my $s = Net::Appliance::Session->new(
          Host     => 'hostname.example',
          Platform => 'FWSM3',
+         Source   => '/path/to/file.yml', # optional
      );
 
     If you want to add a new phrasebook, or edit an exiting one, there are
     two options. Either submit a patch to the maintaner of the
     "Net::Appliance::Phrasebook" module, or read the manual page for that
     module to find out how to use a local phrasebook rather than the builtin
-    one.
+    one via the "Source" parameter.
 
 DIAGNOSTICS
     Firstly, if you want to see a copy of everything sent to and received
@@ -248,12 +249,12 @@ INTERNALS
     elegant, in parts ;-) In particular, the following "Net::Telnet" method
     has been overridden to modify behaviour:
 
-    "Net::Appliance::Session::fhopen"
-        The killer feature in "Net::Telnet" is that it allows you to swap
-        out the builtin I/O target from a standard TELNET connection, to
-        another filehandle of your choice. However, it does so in a rather
-        intrusive way to the poor object, so this method is overridden to
-        safeguard the instance's private data.
+  "fhopen"
+    The killer feature in "Net::Telnet" is that it allows you to swap out
+    the builtin I/O target from a standard TELNET connection, to another
+    filehandle of your choice. However, it does so in a rather intrusive way
+    to the poor object, so this method is overridden to safeguard the
+    instance's private data.
 
 DEPENDENCIES
     Other than the contents of the standard Perl distribution, you will need

@@ -1,2 +1,6 @@
+0.06  Wed Oct 04 12:51:00 BST 2006
+    - Allow Source arg, to pass through to Net::Appliance::Phrasebook
+    - Recursive end_configure attempts to exit up to three times
+    - Fixups to POD
 0.05  Tue Oct 03 16:22:00 BST 2006
     - Initial Release

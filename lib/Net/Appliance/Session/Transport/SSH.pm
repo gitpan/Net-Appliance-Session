@@ -34,10 +34,13 @@ sub _spawn_command;
 sub _connect_core {
     my $self = shift;
     my %args = @_;
+    $args{SHKC} = 1 if !exists $args{SHKC};
 
     # start the SSH session, and get a pty for it
     my $pty = _spawn_command(
-        '/usr/bin/ssh',
+        '/usr/bin/ssh', '-o',
+        ($args{SHKC} ? 'StrictHostKeyChecking=yes'
+                     : 'StrictHostKeyChecking=no'),
         '-l', $args{Name},
         $self->host,
     )
@@ -64,6 +67,8 @@ sub _connect_core {
 # unfortunately this is true "Cargo Cult Programming", but I don't have the
 # time to work out why this code from Expect.pm works just fine and other
 # attempts using IO::Pty or Proc::Spawn do not.
+#
+# minor alterations to use CORE::close and raise_error
 
 sub _spawn_command {
     my @command = @_;
@@ -86,7 +91,6 @@ sub _spawn_command {
     if($pid) { # parent
         my $errno;
 
-        # CORE:: prefix required because of clash with Net::Telnet::close
         CORE::close STAT_WTR;
         $pty->close_slave();
         $pty->set_raw();
@@ -146,6 +150,31 @@ Net::Appliance::Session::Transport::SSH
 This package sets up a new pseudo terminal, connected to an SSH client running
 in a spawned process, which is then bound into C<< Net::Telnet >> for IO
 purposes.
+
+=head1 CONFIGURATION
+
+Via the call to C<connect>, the following additional named arguments are
+available:
+
+=over 4
+
+=item C<SHKC>
+
+Setting the value for this key to any False value will disable C<openssh>'s
+Strict Host Key Checking. See the C<openssh> documentation for further
+details. This might be useful where you are connecting to appliances for which
+an entry does not yet exist in your C<known_hosts> file, and you do not wish
+to be interactively prompted to add it.
+
+ $s->connect(
+    Name     => 'username',
+    Password => 'password',
+    SHKC     => 0,
+ );
+
+The default operation is to enable Strict Host Key Checking.
+
+=back
 
 =head1 ACKNOWLEDGEMENTS
 
