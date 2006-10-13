@@ -75,7 +75,7 @@ upon a derived class to do something with the guts of the TELNET connection
 
 =item *
 
-L<Net::Appliance::Session::Trasnsport::SSH>
+L<Net::Appliance::Session::Transport::SSH>
 
 =back
 

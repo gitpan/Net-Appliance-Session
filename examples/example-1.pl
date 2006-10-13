@@ -23,8 +23,8 @@ $s->input_log(*STDOUT); # echo all I/O
 
 eval {
     $s->connect(
-        Name     => 'username', # maybe DB retrieve, etc
-        Password => 'password', # maybe DB retrieve, etc
+        Name     => $username,
+        Password => $password,
         SHKC     => 0, # SSH Strict Host Key Checking disabled
     );
     $s->begin_privileged; # use same pass as login
