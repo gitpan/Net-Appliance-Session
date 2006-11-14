@@ -46,6 +46,8 @@ sub Net::Appliance::Session::Error::full_message {
     return $msg;
 }
 
+# ===========================================================================
+
 1;
 
 # Copyright (c) The University of Oxford 2006. All Rights Reserved.

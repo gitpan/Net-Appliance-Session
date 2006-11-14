@@ -10,9 +10,12 @@ use Net::Appliance::Session::Exceptions;
 sub enable_paging {
     my $self = shift;
     
+    return 0 unless $self->do_paging;
     return 0 unless $self->logged_in;
 
-    $self->cmd($self->pb->fetch('paging') .' 24')
+    $self->cmd(
+        $self->pb->fetch('paging_cmd') .' '. $self->get_pager_enable_lines
+    )
         or $self->error('Failed to enable paging');
 
     return $self;
@@ -21,9 +24,12 @@ sub enable_paging {
 sub disable_paging {
     my $self = shift;
 
+    return 0 unless $self->do_paging;
     return 0 unless $self->logged_in;
 
-    $self->cmd($self->pb->fetch('paging') .' 0')
+    $self->cmd(
+        $self->pb->fetch('paging_cmd') .' '. $self->get_pager_disable_lines
+    )
         or $self->error('Failed to disable paging');
 
     return $self;
@@ -40,7 +46,8 @@ sub begin_privileged {
     my $self = shift;
     my $match;
 
-    return $self if $self->in_privileged_mode;
+    return 0 unless $self->do_privileged_mode;
+    return 0 if $self->in_privileged_mode;
 
     raise_error 'Must connect before you can begin_privileged'
         unless $self->logged_in;
@@ -62,23 +69,32 @@ sub begin_privileged {
         $password = $args{Password};
     }
 
+    if (! $password) {
+        raise_error "A set password is required before begin_privileged";
+    }
+
     # decide whether to explicitly login or just enable
     if ($username ne $self->get_username) {
-        $self->print('login');
+        $self->print($self->pb->fetch('begin_privileged_with_user_cmd'));
     }
     else {
-        $self->print('enable');
+        $self->print($self->pb->fetch('begin_privileged_cmd'));
     }
 
-    # whether login or privileged, we still must be prepared for username:
+    # whether login or enable, we still must be prepared for username:
     # prompt because it may appear even with privileged
 
-    (undef, $match) = $self->waitfor('/(?:[Uu]sername|[Pp]assword): ?$/')
+    (undef, $match) = $self->waitfor($self->pb->fetch('userpass_prompt'))
         or $self->error('Failed to get first privileged prompt');
 
-    if ($match =~ m/[Uu]sername/) {
+    if ($match =~ eval 'qr'. $self->pb->fetch('user_prompt')) {
+        # delayed check, Name is now required
+        if (! $username) {
+            raise_error "A set username is required to enter priv on this host";
+        }
+    
         $self->print($username);
-        $self->waitfor('/[Pp]assword: ?$/')
+        $self->waitfor($self->pb->fetch('pass_prompt'))
             or $self->error('Failed to get privileged password prompt');
     }
 
@@ -91,9 +107,8 @@ sub begin_privileged {
 
     # fairly dumb check to see that we're actually in privileged and
     # not back at a regular prompt
-
     $self->error('Failed to enter privileged mode')
-        if $match !~ m/# ?$/;
+        if $match !~ eval 'qr'. $self->pb->fetch('privileged_prompt');
 
     $self->in_privileged_mode(1);
 
@@ -103,7 +118,8 @@ sub begin_privileged {
 sub end_privileged {
     my $self = shift;
     
-    return $self unless $self->in_privileged_mode;
+    return 0 unless $self->do_privileged_mode;
+    return 0 unless $self->in_privileged_mode;
 
     raise_error 'Must leave configure mode before leaving privileged mode'
         if $self->in_configure_mode;
@@ -111,7 +127,7 @@ sub end_privileged {
     # XXX: don't try to optimise away this print() and waitfor() into a cmd()
     # because they are needed to get the $match back!
 
-    $self->print('disable');
+    $self->print($self->pb->fetch('end_privileged_cmd'));
     my (undef, $match) = $self->waitfor($self->prompt)
         or $self->error('Failed to get prompt after leaving privileged mode');
 
@@ -119,7 +135,7 @@ sub end_privileged {
     # and back at a regular prompt
 
     $self->error('Failed to leave privileged mode')
-        if $match !~ m/> ?$/;
+        if $match !~ eval 'qr'. $self->pb->fetch('basic_prompt');
 
     $self->in_privileged_mode(0);
 
@@ -138,7 +154,8 @@ foreach (qw( login enable )) {
 sub begin_configure {
     my $self = shift;
 
-    return $self if $self->in_configure_mode;
+    return 0 unless $self->do_configure_mode;
+    return 0 if $self->in_configure_mode;
 
     raise_error 'Must enter privileged mode before configure mode'
         unless $self->in_privileged_mode;
@@ -146,7 +163,7 @@ sub begin_configure {
     # XXX: don't try to optimise away this print() and waitfor() into a cmd()
     # because they are needed to get the $match back!
 
-    $self->print('configure terminal');
+    $self->print($self->pb->fetch('begin_configure_cmd'));
     my (undef, $match) = $self->waitfor($self->prompt)
         or $self->error('Failed to get prompt after entering configure mode');
 
@@ -154,7 +171,7 @@ sub begin_configure {
     # not still at a regular privileged prompt
 
     $self->error('Failed to enter configure mode')
-        if $match !~ m/\(config\)# ?$/;
+        if $match !~ eval 'qr'. $self->pb->fetch('configure_prompt');
 
     $self->in_configure_mode(1);
 
@@ -164,17 +181,18 @@ sub begin_configure {
 sub end_configure {
     my $self = shift;
 
-    return $self unless $self->in_configure_mode;
+    return 0 unless $self->do_configure_mode;
+    return 0 unless $self->in_configure_mode;
 
     # XXX: don't try to optimise away this print() and waitfor() into a cmd()
     # because they are needed to get the $match back!
 
-    $self->print('exit');
+    $self->print($self->pb->fetch('end_configure_cmd'));
     my (undef, $match) = $self->waitfor($self->prompt)
         or $self->error('Failed to get prompt after exit in configure mode');
 
     # we didn't manage to escape configure mode (must be nested?)
-    if ($match =~ m/\(config[^)]*\)# ?$/) {
+    if ($match =~ eval 'qr'. $self->pb->fetch('configure_prompt')) {
         my $caller3 = (caller(3))[3];
 
         # max out at three tries to exit configure mode

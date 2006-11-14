@@ -1,4 +1,6 @@
 lib/Net/Appliance/Session/Exceptions.pm
+lib/Net/Appliance/Session/Transport/Serial.pm
+lib/Net/Appliance/Session/Transport/Telnet.pm
 lib/Net/Appliance/Session/Transport/SSH.pm
 lib/Net/Appliance/Session/Transport.pm
 lib/Net/Appliance/Session/Engine.pm

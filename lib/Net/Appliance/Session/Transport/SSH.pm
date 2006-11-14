@@ -5,8 +5,6 @@ use warnings FATAL => 'all';
 
 use base 'Net::Appliance::Session::Transport';
 use Net::Appliance::Session::Exceptions;
-use IO::Pty;
-use POSIX;
 
 # ===========================================================================
 
@@ -25,20 +23,32 @@ sub new {
     return $self;
 }
 
-# pre-declared 'private' subroutine
-sub _spawn_command;
-
 # sets up new pseudo terminal connected to ssh client running in
 # a child process.
 
 sub _connect_core {
     my $self = shift;
     my %args = @_;
-    $args{SHKC} = 1 if !exists $args{SHKC};
+
+    $args{SHKC} = 1              if !exists $args{SHKC};
+    $args{App}  = '/usr/bin/ssh' if !exists $args{App};
+
+    if (! defined $args{Name}) {
+        raise_error "'Name' is a required parameter to SSH connect";
+    }
+
+    if ($self->do_login and ! defined $args{Password}) {
+        raise_error "'Password' is a required parameter to SSH connect"
+                    . "when using active login";
+    }
+
+    if (! defined $self->host) {
+        raise_error 'Cannot log in to an unspecified host!';
+    }
 
     # start the SSH session, and get a pty for it
-    my $pty = _spawn_command(
-        '/usr/bin/ssh', '-o',
+    my $pty = $self->_spawn_command(
+        $args{App}, '-o',
         ($args{SHKC} ? 'StrictHostKeyChecking=yes'
                      : 'StrictHostKeyChecking=no'),
         '-l', $args{Name},
@@ -49,101 +59,40 @@ sub _connect_core {
     # set new pty as Net::Telnet's IO
     $self->fhopen($pty);
 
-    $self->waitfor('/[Pp]assword: ?$/')
-        or $self->error('Failed to get login password prompt');
+    if ($self->do_login) {
+        $self->waitfor($self->pb->fetch('pass_prompt'))
+            or $self->error('Failed to get login password prompt');
 
-    # cannot cmd() here because sometimes there's a "helpful" login banner
-    $self->print($args{Password});
+        # cannot cmd() here because sometimes there's a "helpful"
+        # login banner
+        $self->print($args{Password});
+    }
+
     $self->waitfor($self->prompt)
         or $self->error('Login failed to remote host');
 
     return $self;
 }
 
-# 
-# === end of class methods, rest is just support subroutines ===
-# 
-
-# unfortunately this is true "Cargo Cult Programming", but I don't have the
-# time to work out why this code from Expect.pm works just fine and other
-# attempts using IO::Pty or Proc::Spawn do not.
-#
-# minor alterations to use CORE::close and raise_error
-
-sub _spawn_command {
-    my @command = @_;
-    my $pty = IO::Pty->new();
-
-    # set up pipe to detect childs exec error
-    pipe(STAT_RDR, STAT_WTR) or raise_error "Cannot open pipe: $!";
-    STAT_WTR->autoflush(1);
-    eval {
-        fcntl(STAT_WTR, F_SETFD, FD_CLOEXEC);
-    };
-
-    my $pid = fork;
-
-    if (! defined ($pid)) {
-        raise_error "Cannot fork: $!" if $^W;
-        return undef;
-    }
-
-    if($pid) { # parent
-        my $errno;
-
-        CORE::close STAT_WTR;
-        $pty->close_slave();
-        $pty->set_raw();
-
-        # now wait for child exec (eof due to close-on-exit) or exec error
-        my $errstatus = sysread(STAT_RDR, $errno, 256);
-        raise_error "Cannot sync with child: $!" if not defined $errstatus;
-        CORE::close STAT_RDR;
-        
-        if ($errstatus) {
-            $! = $errno+0;
-            raise_error "Cannot exec(@command): $!\n" if $^W;
-            return undef;
-        }
-    }
-    else { # child
-        CORE::close STAT_RDR;
-
-        $pty->make_slave_controlling_terminal();
-        my $slv = $pty->slave()
-            or raise_error "Cannot get slave: $!";
-
-        $slv->set_raw();
-        
-        CORE::close($pty);
-
-        CORE::close(STDIN);
-        open(STDIN,"<&". $slv->fileno())
-            or raise_error "Couldn't reopen STDIN for reading, $!\n";
- 
-        CORE::close(STDOUT);
-        open(STDOUT,">&". $slv->fileno())
-            or raise_error "Couldn't reopen STDOUT for writing, $!\n";
-
-        CORE::close(STDERR);
-        open(STDERR,">&". $slv->fileno())
-            or raise_error "Couldn't reopen STDERR for writing, $!\n";
-
-        { exec(@command) };
-        print STAT_WTR $!+0;
-        raise_error "Cannot exec(@command): $!\n";
-    }
-
-    return $pty;
-}
+# ===========================================================================
 
 1;
-
-# ===========================================================================
 
 =head1 NAME
 
 Net::Appliance::Session::Transport::SSH
+
+=head1 SYNOPSIS
+
+ $s = Net::Appliance::Session->new(
+    Host      => 'hostname.example',
+    Transport => 'SSH',
+ );
+
+ $s->connect(
+    Name     => $username, # required
+    Password => $password, # required if logging in
+ );
 
 =head1 DESCRIPTION
 
@@ -153,8 +102,33 @@ purposes.
 
 =head1 CONFIGURATION
 
-Via the call to C<connect>, the following additional named arguments are
-available:
+This module hooks into Net::Appliance::Session via its C<connect()> method.
+Parameters are supplied to C<connect()> in a hash of named arguments.
+
+=head2 Prerequisites
+
+Before calling C<connect()> you must have set the C<Host> key in your
+Net::Appliance::Session object, either via the named parameter to C<new()> or
+the C<host()> object method inherited from Net::Telnet.
+
+=head2 Required Parameters
+
+=over 4
+
+=item C<Name>
+
+A username must be passed in the C<Name> parameter otherwise the call will
+die. This value is stored for possible later use by C<begin_privileged()>.
+
+=item C<Password>
+
+If log-in is enabled (i.e. you have not disabled this via C<do_login()>) then
+you must also supply a password in the C<Password> parameter value. The
+password will be stored for possible later use by C<begin_privileged()>.
+
+=back
+
+=head2 Optional Parameters
 
 =over 4
 
@@ -167,19 +141,33 @@ an entry does not yet exist in your C<known_hosts> file, and you do not wish
 to be interactively prompted to add it.
 
  $s->connect(
-    Name     => 'username',
-    Password => 'password',
+    Name     => $username,
+    Password => $password,
     SHKC     => 0,
  );
 
 The default operation is to enable Strict Host Key Checking.
 
+=item C<App>
+
+You can override the default location of your SSH application binary by
+providing a value to this named parameter. This module expects that the binary
+is a version of OpenSSH.
+
+ $s->connect(
+    Name     => $username,
+    Password => $password,
+    App      => '/usr/local/bin/openssh',
+ );
+
+The default binary location is C</usr/bin/ssh>.
+
 =back
 
-=head1 ACKNOWLEDGEMENTS
+=head1 DEPENDENCIES
 
-The SSH command spawning code was based on that in C<Expect.pm> and is
-copyright Roland Giersig and/or Austin Schutz.
+To be used, this module requires that your system have a working copy of the
+OpenSSH SSH client application installed.
 
 =head1 AUTHOR
 
@@ -189,20 +177,16 @@ Oliver Gorwits C<< <oliver.gorwits@oucs.ox.ac.uk> >>
 
 Copyright (c) The University of Oxford 2006. All Rights Reserved.
 
-This program is free software; you can redistribute it and/or modify it
-under
+This program is free software; you can redistribute it and/or modify it under
 the terms of version 2 of the GNU General Public License as published by the
 Free Software Foundation.
 
 This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-details.
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program; if not, write to the Free Software Foundation, Inc., 51
-Franklin
+this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 St, Fifth Floor, Boston, MA 02110-1301 USA
 
 =cut

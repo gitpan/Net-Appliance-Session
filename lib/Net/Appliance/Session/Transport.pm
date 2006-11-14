@@ -5,6 +5,8 @@ use warnings FATAL => 'all';
 
 use Net::Appliance::Session::Exceptions;
 use Net::Telnet;
+use IO::Pty;
+use POSIX;
 
 # ===========================================================================
 # base class for transports - just a Net::Telnet instance factory, really.
@@ -19,33 +21,29 @@ sub new {
 
 sub connect {
     my $self = shift;
-    my %args;
 
     # interpret params into hash
-    if (scalar @_ == 2) {
-        @args{'Name', 'Password'} = @_;
+    if (scalar @_ % 2) {
+        raise_error 'Odd number of arguments to connect()';
     }
-    elsif ((scalar @_ >= 4) and (! scalar @_ % 2)) {
-        %args = @_;
-    }
-    else {
-        raise_error 'Odd or too few arguments to connect()';
-    }
-
-    if (! defined $self->host) {
-        raise_error 'Cannot log in to an unspecified host!';
-    }
+    my %args = @_;
 
     $self->_connect_core( %args );
 
-    $self->set_username($args{Name});
-    $self->set_password($args{Password});
+    if (! $self->get_username and exists $args{Name}) {
+        $self->set_username($args{Name});
+    }
+    if (! $self->get_password and exists $args{Password}) {
+        $self->set_password($args{Password});
+    }
+
     $self->logged_in(1);
-    $self->in_configure_mode(0);
-    $self->in_privileged_mode(0);
+
+    $self->in_privileged_mode( $self->do_privileged_mode ? 0 : 1 );
+    $self->in_configure_mode( $self->do_configure_mode ? 0 : 1 );
 
     # disable paging... this is undone in our close() method
-    $self->disable_paging;
+    $self->disable_paging if $self->do_paging;
 
     return $self;
 }
@@ -54,9 +52,83 @@ sub _connect_core {
     raise_error 'Incomplete Transport or there is no Transport loaded!';
 }
 
-1;
+# unfortunately this is true "Cargo Cult Programming", but I don't have the
+# time to work out why this code from Expect.pm works just fine and other
+# attempts using IO::Pty or Proc::Spawn do not.
+#
+# minor alterations to use CORE::close and raise_error
+
+sub _spawn_command {
+    my $self = shift;
+    my @command = @_;
+    my $pty = IO::Pty->new();
+
+    # set up pipe to detect childs exec error
+    pipe(STAT_RDR, STAT_WTR) or raise_error "Cannot open pipe: $!";
+    STAT_WTR->autoflush(1);
+    eval {
+        fcntl(STAT_WTR, F_SETFD, FD_CLOEXEC);
+    };
+
+    my $pid = fork;
+
+    if (! defined ($pid)) {
+        raise_error "Cannot fork: $!" if $^W;
+        return undef;
+    }
+
+    if($pid) { # parent
+        my $errno;
+
+        CORE::close STAT_WTR;
+        $pty->close_slave();
+        $pty->set_raw();
+
+        # now wait for child exec (eof due to close-on-exit) or exec error
+        my $errstatus = sysread(STAT_RDR, $errno, 256);
+        raise_error "Cannot sync with child: $!" if not defined $errstatus;
+        CORE::close STAT_RDR;
+        
+        if ($errstatus) {
+            $! = $errno+0;
+            raise_error "Cannot exec(@command): $!\n" if $^W;
+            return undef;
+        }
+    }
+    else { # child
+        CORE::close STAT_RDR;
+
+        $pty->make_slave_controlling_terminal();
+        my $slv = $pty->slave()
+            or raise_error "Cannot get slave: $!";
+
+        $slv->set_raw();
+        
+        CORE::close($pty);
+
+        CORE::close(STDIN);
+        open(STDIN,"<&". $slv->fileno())
+            or raise_error "Couldn't reopen STDIN for reading, $!\n";
+ 
+        CORE::close(STDOUT);
+        open(STDOUT,">&". $slv->fileno())
+            or raise_error "Couldn't reopen STDOUT for writing, $!\n";
+
+        CORE::close(STDERR);
+        open(STDERR,">&". $slv->fileno())
+            or raise_error "Couldn't reopen STDERR for writing, $!\n";
+
+        { exec(@command) };
+        print STAT_WTR $!+0;
+        raise_error "Cannot exec(@command): $!\n";
+    }
+
+    return $pty;
+}
 
 # ===========================================================================
+
+1;
 
 =head1 NAME
 
@@ -65,7 +137,7 @@ Net::Appliance::Session::Transport
 =head1 DESCRIPTION
 
 This package is the base class for all C<< Net::Appliance::Session >>
-transports. It is effectively a C<< Net::Telnet >> factory, which then calls
+Transports. It is effectively a C<< Net::Telnet >> factory, which then calls
 upon a derived class to do something with the guts of the TELNET connection
 (perhaps rip it out and shove an SSH connection in there instead).
 
@@ -75,9 +147,22 @@ upon a derived class to do something with the guts of the TELNET connection
 
 =item *
 
+L<Net::Appliance::Session::Transport::Serial>
+
+=item *
+
 L<Net::Appliance::Session::Transport::SSH>
 
+=item *
+
+L<Net::Appliance::Session::Transport::Telnet>
+
 =back
+
+=head1 ACKNOWLEDGEMENTS
+
+The SSH command spawning code was based on that in C<Expect.pm> and is
+copyright Roland Giersig and/or Austin Schutz.
 
 =head1 AUTHOR
 

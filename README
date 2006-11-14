@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    This document refers to version 0.08 of Net::Appliance::Session.
+    This document refers to version 0.09 of Net::Appliance::Session.
 
 SYNOPSIS
      use Net::Appliance::Session;
@@ -35,10 +35,10 @@ DESCRIPTION
     that module. It is recommended that you read the Net::Telnet manual page
     for further details.
 
-    In this early release of "Net::Appliance::Session", only SSH connections
-    to Cisco devices are supported, but it is hoped that further trasports
-    (for example serial line access) and target device engines (e.g.
-    Juniper) will be developed.
+    This module natively supports connections via SSH, Telnet and a Serial
+    Port. All commands can be overridden from the built-in Cisco defaults in
+    order to support other target devices; the connection process (user
+    log-in) is similarly configurable.
 
 METHODS
     Objects created by this module are based upon Net::Telnet so the
@@ -54,38 +54,29 @@ METHODS
     The significant difference with this module is that the actual
     connection to the remote device is delayed until you "connect()".
 
-    Further named arguments to those in Net::Telnet are accepted, to control
-    behaviour specific to this module. This is discussed in "CONFIGURATION",
-    below.
+    Named Parameters, passed as a hash to this constructor, are optional.
+    Some are described in "TRANSPORTS" and "CONFIGURATION" below. Any others
+    are passed directly to Net::Telnet (which dies on unknown parameters).
 
     This method returns a new "Net::Appliance::Session" object.
 
   "connect"
     When you instantiate a new Net::Appliance::Session object the module
     does not actually establish a connection with the target device. This
-    behaviour is slightly different to Net::Telnet and is because the module
-    also needs to have login credentials. Use this method to establish that
-    interactive session.
+    behaviour is slightly different to Net::Telnet and is because the
+    Transport may need to have login credentials before a connection is made
+    (e.g. in the case of SSH). Use this method to establish that interactive
+    session.
 
-    This method requires two arguments: the login username and password.
-    Either provide them as a pair of parameters to "connect" in that order,
-    or as a list of named parameters using the key names "Name" and
-    "Password" respectively. For example:
-
-     $s->connect('username', 'password');
-     # or
-     $s->connect(Name => 'username', Password => 'password');
+    Parameters to this method are determined by the Transport (SSH, Telnet,
+    etc) that you are running. See the Net::Appliance::Session::Transport
+    manual page for further details.
 
     In addition to logging in, "connect" will also disable paging in the
     output for its interactive session. This means that unlike
     Net::Telnet::Cisco no special page scraping logic is required in this
-    module's code.
-
-    It is recommended that the named parameter format is used for passing
-    arguments to "connect". Each connection *transport* is implemented by an
-    addon module, which may be set up to take additional named parameters.
-    See Net::Appliance::Session::Transport for details of available
-    transports.
+    module's code. This feature can be disabled (see "CONFIGURATION",
+    below).
 
   "begin_privileged"
     To enter privileged mode on the device use this method. Of course you
@@ -143,7 +134,7 @@ METHODS
 
     *   Error message from your appliance in the response
 
-    If any of these occurs then you will get an exception with apropriately
+    If any of these occurs then you will get an exception with appropriately
     populated fields. Otherwise, in array context this method returns the
     command response, just as "Net::Telnet" would. In scalar context the
     object itself returned.
@@ -165,38 +156,146 @@ METHODS
     circumstances it will be called automatically for you by the overridden
     "cmd()" method.
 
+TRANSPORTS
+    This module supports interactive connections to devices over SSH, Telnet
+    and via a Serial Port. The default is to use SSH, so to select an
+    alternative, pass an optional "Transport" parameter to the "new()"
+    constructor:
+
+     my $s = Net::Appliance::Session->new(
+         Host      => 'hostname.example',
+         Transport => 'Serial',
+     );
+
+    Whatever transport you are using, it is highly recommended that you read
+    the relevant manual page. The Net::Appliance::Session::Transport manual
+    is a good starting place.
+
 CONFIGURATION
-    Occasionally there is a configuration setting that is implemented
-    through different commands on different models of device. To cope with
-    this, Net::Appliance::Session makes use of a phrasebook in which it
-    stores alternative syntax for various operating system platforms.
+  Log-in
+    In the default case, which is SSH to a Cisco IOS device, both a Username
+    and Password are required and a full log-in is made (i.e. the device
+    presents a Password prompt, and so on).
+
+    However, some devices require no login. Examples of this might be a
+    Public Route Server, or a device connected via a Serial Port. In that
+    situation, use the following object method *before* calling "connect()":
+
+   "do_login"
+    Passing any False value to this method prevents "connect()" from
+    expecting to have to negotiate a log-in to the device. Most Transports
+    in that case do not require the Password parameter, although a Username
+    might still be required. By default log-in negotiation is enabled.
+
+  Paging
+    In the default case, Net::Appliance::Session expects that command output
+    paging is enabled on the device. This is where response to commands is
+    "paged", having only (e.g.) 24 lines printed at a time, and you press
+    the Enter or Space key to see more.
+
+    With automated interaction this is useless, and error-prone, so
+    Net::Appliance::Session by default will send a command to disable paging
+    straight after it connects, and re-enable it as part of "close()".
+
+    To override the pager management command itself, you will need to edit
+    the phrasebook (see below). The following object methods alter other
+    aspects of pager management:
+
+   "do_paging"
+    Passing any False value to this method prevents "connect()" and
+    "close()" from respectively disabling and re-enabling paging on the
+    device. By default paging management is enabled.
+
+   "set_pager_disable_lines"
+    Net::Appliance::Session assumes that the command to disable the pager
+    just re-sets the number of paging lines. Pass this method a new value
+    for that number, which has a default of zero in the module.
+
+   "set_pager_enable_lines"
+    Likewise, to re-enable paging Net::Appliance::Session will call the
+    pager management command with a value for the number of output lines per
+    page. Pass this method a value to override the default of 24.
+
+  Command mode
+    If your target device does not have the concept of "privileged exec" or
+    "configure" mode, then just don't call the methods to change into those
+    modes.
+
+    However, there is a catch. If your device separates only configure mode,
+    then when you try to call "begin_configure()" straight after a log-in,
+    the module will complain, because it thinks you need to ask for a
+    "begin_privileged" first. Also, when disconnecting,
+    Net::Appliance::Session will attempt to step out of privileged and
+    configure modes, so if they don't apply you will want to disable those
+    steps.
+
+    To alter all this behaviour, use the following object methods.
+
+    If you are trying to subvert this module to just automate interaction
+    with a CLI via SSH, Telnet or Serial Line on a strange kind of device,
+    then these methods will be useful (as well as "do_paging", above).
+
+   "do_privileged_mode"
+    If you pass a False value to this method, then Net::Appliance::Session
+    will believe you are in some kind of privileged mode as soon as you log
+    in. The net effect is that you can now safely call "begin_configure()".
+    The default is to actively gatekeep access to privileged mode.
+
+   "do_configure_mode"
+    By passing a False value to this method you also make
+    Net::Appliance::Session believe you are in configure mode straight after
+    entering privileged mode (or after log in if "do_privileged_mode" is
+    also False). The default is to actively gatekeep access to configure
+    mode.
+
+  Commands and Prompts
+    Various models of network device, either from one vendor such as Cisco
+    or between vendors, will naturally use alternate command and command
+    prompt syntax. Net::Appliance::Session does not hard-code any of these
+    commands or pattern matches in its source. They are all loaded at
+    run-time from an external phrasebook (a.k.a. dictionary), which you may
+    of course override.
 
     The default operation of Net::Appliance::Session is to assume that the
-    target is running a form of Cisco's IOS. Support is also available, via
-    the "Net::Appliance::Phrasebook" module, for the following operating
-    systems:
+    target is running a form of Cisco's IOS, so if this is the case you
+    should not need to modify any settings.
+
+    Limited support is also available, via the "Net::Appliance::Phrasebook"
+    module, for the following operating systems:
 
      IOS     # the default
      Aironet # currently the same as the default
 
+     CATOS   # for older, pre-IOS Cisco devices
      PIXOS   # for PIX OS-based devices (including FWSM Release 2.x)
      FWSM    # currently the same as 'PIXOS'
      FWSM3   # for FWSM Release 3.x devices (slightly different to FWSM 2.x)
 
-    To select a phrasebook, pass an optional parameter to the "new" method
-    like so:
+    To select a phrasebook, pass an optional "Platform" parameter to the
+    "new" method like so:
 
      my $s = Net::Appliance::Session->new(
          Host     => 'hostname.example',
          Platform => 'FWSM3',
-         Source   => '/path/to/file.yml', # optional
      );
 
-    If you want to add a new phrasebook, or edit an exiting one, there are
-    two options. Either submit a patch to the maintaner of the
+    If you want to add a new phrasebook, or override an existing one, there
+    are two options. Either submit a patch to the maintaner of the
     "Net::Appliance::Phrasebook" module, or read the manual page for that
     module to find out how to use a local phrasebook rather than the builtin
-    one via the "Source" parameter.
+    one via the "Source" parameter (which is accepted by this module and
+    passed on verbatim).
+
+     my $s = Net::Appliance::Session->new(
+         Host     => 'hostname.example',
+         Source   => '/path/to/file.yml',
+         Platform => 'MYDEVICE',
+     );
+
+    In this way, you can fix bugs in the standard command set, adjust them
+    for your own devices, or "port" this module onto a completely different
+    appliance platform (that happens to provide an SSH, Telnet or Serial
+    Port CLI).
 
 DIAGNOSTICS
     Firstly, if you want to see a copy of everything sent to and received
@@ -253,7 +352,7 @@ INTERNALS
     The killer feature in "Net::Telnet" is that it allows you to swap out
     the builtin I/O target from a standard TELNET connection, to another
     filehandle of your choice. However, it does so in a rather intrusive way
-    to the poor object, so this method is overridden to safeguard the
+    to the poor object, so this method is overridden to safeguard our
     instance's private data.
 
 DEPENDENCIES
@@ -272,7 +371,7 @@ DEPENDENCIES
 
     *   Class::Accessor::Fast::Contained
 
-    *   Net::Appliance::Phrasebook
+    *   Net::Appliance::Phrasebook >= 0.07
 
 AUTHOR
     Oliver Gorwits "<oliver.gorwits@oucs.ox.ac.uk>"
