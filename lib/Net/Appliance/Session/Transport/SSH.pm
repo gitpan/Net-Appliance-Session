@@ -48,7 +48,7 @@ sub _connect_core {
 
     if (exists $args{SHKC}) {
         push @{$args{Opts}}, '-o', 'StrictHostKeyChecking='.
-            $args{SHKC} ? 'yes' : 'no';
+            ($args{SHKC} ? 'yes' : 'no');
     }
 
     # start the SSH session, and get a pty for it
