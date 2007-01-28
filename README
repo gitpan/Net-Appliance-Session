@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    This document refers to version 0.09 of Net::Appliance::Session.
+    This document refers to version 0.11 of Net::Appliance::Session.
 
 SYNOPSIS
      use Net::Appliance::Session;
@@ -139,10 +139,16 @@ METHODS
     command response, just as "Net::Telnet" would. In scalar context the
     object itself returned.
 
-    Being overridden in this way means you should have no need for the
+    The only usable method arguments are "String", "Output" and "Timeout",
+    plus as a special case, "Match". The "Match" named argument takes in an
+    *array reference* a list of one or more strings representing valid Perl
+    pattern match operators (e.g. "/foo/"). Therefore, the "cmd()" method
+    can check against the default command prompt, built-in error strings,
+    and also a custom response of your choice at the same time.
+
+    Being overridden in this way means you should have less need for the
     "print()" and "waitfor()" methods of "Net::Telnet", although they are of
-    course still available should you want them. The only usable method
-    arguments are "String", "Output" and "Timeout".
+    course still available should you want them.
 
   "close"
     This "Net::Telnet" method has been overridden to automatically back out
@@ -296,6 +302,27 @@ CONFIGURATION
     for your own devices, or "port" this module onto a completely different
     appliance platform (that happens to provide an SSH, Telnet or Serial
     Port CLI).
+
+    Some sanity checking takes place at certain points to make sure the
+    phrasebook contains necessary phrases. If overriding the phrasebook,
+    you'll need to provide at least the "basic_phrases" as set in this
+    module's source code. If using Privileged and Configure mode, there are
+    "privileged_phrases" and "configure_phrases" that will be required,
+    also. Paging requires a "pager_cmd" phrase to be available. See the
+    source code of Net::Appliance::Phrasebook for examples.
+
+    If you fancy yourself as a bit of a cowboy, then there is an option to
+    "new()" that disables this checking of phrasebook entries:
+
+     my $s = Net::Appliance::Session->new(
+         Host     => 'hostname.example',
+         Platform => 'MYDEVICE',
+         Source   => '/path/to/file.yml', # override phrasebook completely
+         CheckPB  => 0, # squash errors about missing phrasebook entries
+     );
+
+    You better have read the source and checked what phrases you need before
+    disabling "CheckPB". Don't say I didn't warn you.
 
 DIAGNOSTICS
     Firstly, if you want to see a copy of everything sent to and received

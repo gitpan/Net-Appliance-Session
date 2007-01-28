@@ -3,15 +3,32 @@ package Net::Appliance::Session::Engine;
 use strict;
 use warnings FATAL => 'all';
 
+use base 'Class::Data::Inheritable';
 use Net::Appliance::Session::Exceptions;
+
+__PACKAGE__->mk_classdata(
+    privileged_phrases => [qw/
+        privileged_prompt
+        begin_privileged_cmd
+        begin_privileged_with_user_cmd
+        end_privileged_cmd
+    /],
+    configure_phrases => [qw/
+        configure_prompt
+        begin_configure_cmd
+        end_configure_cmd
+    /],
+);
 
 # ===========================================================================
 
 sub enable_paging {
     my $self = shift;
-    
+
     return 0 unless $self->do_paging;
     return 0 unless $self->logged_in;
+    raise_error "Definition of 'paging_cmd' missing from phrasebook!"
+        if ! eval {$self->pb->fetch('paging_cmd')};
 
     $self->cmd(
         $self->pb->fetch('paging_cmd') .' '. $self->get_pager_enable_lines
@@ -26,6 +43,8 @@ sub disable_paging {
 
     return 0 unless $self->do_paging;
     return 0 unless $self->logged_in;
+    raise_error "Definition of 'paging_cmd' missing from phrasebook!"
+        if ! eval {$self->pb->fetch('paging_cmd')};
 
     $self->cmd(
         $self->pb->fetch('paging_cmd') .' '. $self->get_pager_disable_lines
@@ -48,6 +67,15 @@ sub begin_privileged {
 
     return 0 unless $self->do_privileged_mode;
     return 0 if $self->in_privileged_mode;
+
+    # (optionally) check all necessary words are in our loaded phrasebook
+    if ($self->check_pb) {
+        my %k_available = map {$_ => 1} $self->pb->keywords;
+        foreach my $k (@{ __PACKAGE__->privileged_phrases }) {
+            $k_available{$k} or
+                raise_error "Definition of '$k' missing from phrasebook!";
+        }
+    }
 
     raise_error 'Must connect before you can begin_privileged'
         unless $self->logged_in;
@@ -156,6 +184,15 @@ sub begin_configure {
 
     return 0 unless $self->do_configure_mode;
     return 0 if $self->in_configure_mode;
+
+    # (optionally) check all necessary words are in our loaded phrasebook
+    if ($self->check_pb) {
+        my %k_available = map {$_ => 1} $self->pb->keywords;
+        foreach my $k (@{ __PACKAGE__->configure_phrases }) {
+            $k_available{$k} or
+                raise_error "Definition of '$k' missing from phrasebook!";
+        }
+    }
 
     raise_error 'Must enter privileged mode before configure mode'
         unless $self->in_privileged_mode;

@@ -11,7 +11,7 @@ use base qw(
     Class::Data::Inheritable
 ); # eventually, would Moosify this ?
 
-our $VERSION = 0.09;
+our $VERSION = 0.11;
 
 use Net::Appliance::Session::Exceptions;
 use Net::Appliance::Phrasebook;
@@ -27,6 +27,7 @@ __PACKAGE__->mk_accessors(qw(
     do_login
     do_privileged_mode
     do_configure_mode
+    check_pb
 ));
 __PACKAGE__->follow_best_practice;
 __PACKAGE__->mk_accessors(qw(
@@ -36,22 +37,16 @@ __PACKAGE__->mk_accessors(qw(
     pager_enable_lines
 ));
 
-__PACKAGE__->mk_classdata(Phrases => [qw/
-    prompt
-    basic_prompt
-    privileged_prompt
-    configure_prompt
-    user_prompt
-    pass_prompt
-    userpass_prompt
-    begin_privileged_cmd
-    begin_privileged_with_user_cmd
-    end_privileged_cmd
-    begin_configure_cmd
-    end_configure_cmd
-    paging_cmd
-    err_string
-/]);
+__PACKAGE__->mk_classdata(
+    basic_phrases => [qw/
+        prompt
+        basic_prompt
+        user_prompt
+        pass_prompt
+        userpass_prompt
+        err_string
+    /]
+);
 
 # ===========================================================================
 
@@ -75,6 +70,7 @@ sub new {
 
     my $tprt = exists $args{Transport} ? delete $args{Transport} : 'SSH';
     my $host = exists $args{Host}      ? delete $args{Host}      : undef;
+    my $chpb = exists $args{CheckPB}   ? delete $args{CheckPB}   : 1;
 
     my %pbargs = (); # arguments to Net::Appliance::Phrasebook->load
     $pbargs{platform} =
@@ -97,12 +93,15 @@ sub new {
     });
 
     # $self will now respond to Net::Telnet methods, and ->pb->fetch()
+    $self->check_pb($chpb);
 
-    # check all necessary words are in our loaded phrasebook
-    my %k_available = map {$_ => 1} $self->pb->keywords;
-    foreach my $k (@{ __PACKAGE__->Phrases }) {
-        $k_available{$k} or
-            raise_error "Definition of '$k' missing from phrasebook!";
+    # (optionally) check all necessary words are in our loaded phrasebook
+    if ($self->check_pb) {
+        my %k_available = map {$_ => 1} $self->pb->keywords;
+        foreach my $k (@{ __PACKAGE__->basic_phrases }) {
+            $k_available{$k} or
+                raise_error "Definition of '$k' missing from phrasebook!";
+        }
     }
 
     # restore the Host argument
@@ -185,22 +184,25 @@ sub error {
 sub cmd {
     my $self = shift;
 
-    my (%args, $string, $output);
+    my (%args, @nt_args, $string, $output);
     if (scalar @_ == 1) {
-        %args = ();
+        @nt_args = ();
         $string = shift @_;
     }
     else {
         %args = @_;
         ($string, $output) = @args{'String', 'Output'};
-        %args = (exists $args{Timeout} ? (Timeout => $args{Timeout}) : ());
+
+        push @nt_args, ('Timeout', $args{Timeout}) if exists $args{Timeout};
+        push @nt_args, (map {( Match => $_ )} @{$args{Match}})
+            if exists $args{Match};
     }
 
     $self->print($string)
         or $self->error('Incomplete command write: only '.
                         $self->print_length .' bytes have been sent');
 
-    my @retvals = $self->waitfor( Match => $self->prompt, %args );
+    my @retvals = $self->waitfor( Match => $self->prompt, @nt_args );
 
     $self->error('Timeout, EOF or other failure waiting for command response')
         if scalar @retvals == 0; # empty list
@@ -243,7 +245,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-This document refers to version 0.09 of Net::Appliance::Session.
+This document refers to version 0.11 of Net::Appliance::Session.
 
 =head1 SYNOPSIS
 
@@ -396,10 +398,16 @@ populated fields. Otherwise, in array context this method returns the command
 response, just as C<Net::Telnet> would. In scalar context the object itself
 returned.
 
-Being overridden in this way means you should have no need for the C<print()>
-and C<waitfor()> methods of C<Net::Telnet>, although they are of course still
-available should you want them. The only usable method arguments are
-C<String>, C<Output> and C<Timeout>.
+The only usable method arguments are C<String>, C<Output> and C<Timeout>, plus
+as a special case, C<Match>. The C<Match> named argument takes in an I<array
+reference> a list of one or more strings representing valid Perl pattern match
+operators (e.g. C</foo/>). Therefore, the C<cmd()> method can check against
+the default command prompt, built-in error strings, and also a custom response
+of your choice at the same time.
+
+Being overridden in this way means you should have less need for the
+C<print()> and C<waitfor()> methods of C<Net::Telnet>, although they are of
+course still available should you want them.
 
 =head2 C<close>
 
@@ -559,6 +567,27 @@ C<Source> parameter (which is accepted by this module and passed on verbatim).
 In this way, you can fix bugs in the standard command set, adjust them for
 your own devices, or "port" this module onto a completely different appliance
 platform (that happens to provide an SSH, Telnet or Serial Port CLI).
+
+Some sanity checking takes place at certain points to make sure the phrasebook
+contains necessary phrases. If overriding the phrasebook, you'll need to
+provide at least the C<basic_phrases> as set in this module's source code. If
+using Privileged and Configure mode, there are C<privileged_phrases> and
+C<configure_phrases> that will be required, also. Paging requires a
+C<pager_cmd> phrase to be available. See the source code of
+L<Net::Appliance::Phrasebook> for examples.
+
+If you fancy yourself as a bit of a cowboy, then there is an option to
+C<new()> that disables this checking of phrasebook entries:
+
+ my $s = Net::Appliance::Session->new(
+     Host     => 'hostname.example',
+     Platform => 'MYDEVICE',
+     Source   => '/path/to/file.yml', # override phrasebook completely
+     CheckPB  => 0, # squash errors about missing phrasebook entries
+ );
+
+You better have read the source and checked what phrases you need before
+disabling C<CheckPB>. Don't say I didn't warn you.
 
 =head1 DIAGNOSTICS
 

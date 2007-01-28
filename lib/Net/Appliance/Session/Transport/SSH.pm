@@ -30,7 +30,7 @@ sub _connect_core {
     my $self = shift;
     my %args = @_;
 
-    $args{SHKC} = 1              if !exists $args{SHKC};
+    $args{Opts} = []             if !exists $args{Opts};
     $args{App}  = '/usr/bin/ssh' if !exists $args{App};
 
     if (! defined $args{Name}) {
@@ -46,12 +46,15 @@ sub _connect_core {
         raise_error 'Cannot log in to an unspecified host!';
     }
 
+    if (exists $args{SHKC}) {
+        push @{$args{Opts}}, '-o', 'StrictHostKeyChecking='.
+            $args{SHKC} ? 'yes' : 'no';
+    }
+
     # start the SSH session, and get a pty for it
     my $pty = $self->_spawn_command(
-        $args{App}, '-o',
-        ($args{SHKC} ? 'StrictHostKeyChecking=yes'
-                     : 'StrictHostKeyChecking=no'),
-        '-l', $args{Name},
+        $args{App}, '-l', $args{Name},
+        @{$args{Opts}},
         $self->host,
     )
         or raise_error 'Unable to launch ssh subprocess';
@@ -146,7 +149,8 @@ to be interactively prompted to add it.
     SHKC     => 0,
  );
 
-The default operation is to enable Strict Host Key Checking.
+The default operation is to let C<openssh> use its default setting for
+StrictHostKeyChecking. You can also set this option to true, of course.
 
 =item C<App>
 
@@ -161,6 +165,22 @@ is a version of OpenSSH.
  );
 
 The default binary location is C</usr/bin/ssh>.
+
+=item C<Opts>
+
+If you want to pass any other options to C<openssh> on its command line, then
+use this option. C<Opts> should be an array reference, and each item in the
+array will be passed to C<openssh>, separated by a singe space character. For
+example:
+
+ $s->connect(
+    Name     => $username,
+    Password => $password,
+    Opts     => [
+        '-p', '222',            # connect to non-standard port on remote host
+        '-o', 'CheckHostIP=no', # don't check host IP in known_hosts file
+    ],
+ );
 
 =back
 

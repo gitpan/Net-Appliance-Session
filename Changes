@@ -1,3 +1,11 @@
+0.11  Sun Jan 28 20:54:00 GMT 2007
+    - Add CheckPB option to allow (almost) complete disabling of phrasebook
+      entry checks
+    - Separate out phrasebook entry checking in case not all required (e.g.
+      not going to use configure mode)
+    - Add special Match argument to cmd() allowing operation more like
+      Net::Telnet's waitfor()
+    - Add Opts option to SSH Engine to support arbitrary openssh args
 0.09  Tue Nov 14 11:59:00 GMT 2006
     - Remove all hard-coded command phrases and prompt regexps, they are now
       pulled from the loaded phrasebook so can be overridden
