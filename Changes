@@ -1,3 +1,5 @@
+0.13  Mon Jan 29 16:48:00 GMT 2007
+    - Bug in my use of Class::Data::Inheritable. A schoolboy-error :(
 0.12  Sun Jan 28 23:46:00 GMT 2007
     - Bug in SSH Transport that would catch someone out one day
 0.11  Sun Jan 28 20:54:00 GMT 2007

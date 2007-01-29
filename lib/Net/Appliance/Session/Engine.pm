@@ -12,12 +12,14 @@ __PACKAGE__->mk_classdata(
         begin_privileged_cmd
         begin_privileged_with_user_cmd
         end_privileged_cmd
-    /],
+    /]
+);
+__PACKAGE__->mk_classdata(
     configure_phrases => [qw/
         configure_prompt
         begin_configure_cmd
         end_configure_cmd
-    /],
+    /]
 );
 
 # ===========================================================================
