@@ -63,8 +63,24 @@ sub _connect_core {
     $self->fhopen($pty);
 
     if ($self->do_login) {
-        $self->waitfor($self->pb->fetch('pass_prompt'))
-            or $self->error('Failed to get login password prompt');
+        # from the Telnet Transport, we also check for username in SSH
+
+        my $match;
+        (undef, $match) = $self->waitfor($self->pb->fetch('userpass_prompt'))
+            or $self->error('Failed to get first prompt');
+
+        if ($match =~ eval 'qr'. $self->pb->fetch('user_prompt')) {
+
+            # delayed check, only at this point do we know if Name was required
+            if (! defined $args{Name}) {
+                raise_error "'Name' is a required parameter to SSH connect "
+                            . "when connecting to this host";
+            }
+
+            $self->print($args{Name});
+            $self->waitfor($self->pb->fetch('pass_prompt'))
+                or $self->error('Failed to get password prompt');
+        }
 
         # cannot cmd() here because sometimes there's a "helpful"
         # login banner

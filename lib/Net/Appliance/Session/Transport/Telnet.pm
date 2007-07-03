@@ -52,9 +52,9 @@ sub _connect_core {
 
         if ($match =~ eval 'qr'. $self->pb->fetch('user_prompt')) {
 
-            # delayed check, only at this point know if Name was required
+            # delayed check, only at this point do we know if Name was required
             if (! defined $args{Name}) {
-                raise_error "'Name' is a required parameter to Telnet connect"
+                raise_error "'Name' is a required parameter to Telnet connect "
                             . "when connecting to this host";
             }
 
@@ -63,13 +63,11 @@ sub _connect_core {
                 or $self->error('Failed to get password prompt');
         }
 
-        $self->cmd($args{Password})
-            or $self->error('Login failed to remote host at password prompt');
+        $self->print($args{Password});
     }
-    else {
-        $self->waitfor($self->prompt)
-            or $self->error('Login failed to remote host');
-    }
+
+    $self->waitfor($self->prompt)
+        or $self->error('Login failed to remote host');
 
     return $self;
 }
