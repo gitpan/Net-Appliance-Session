@@ -70,7 +70,6 @@ sub _spawn_command {
         fcntl(STAT_WTR, F_SETFD, FD_CLOEXEC);
     };
 
-    $SIG{CHLD} = 'IGNORE';
     my $pid = fork;
 
     if (! defined ($pid)) {

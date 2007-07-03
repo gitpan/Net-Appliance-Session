@@ -1,4 +1,7 @@
-0.14  Tue Jul 03 13:23:00 GMT 2007
+0.15  Tue Jul 03 13:23:00 GMT 2007
+    - Users report that the child reaping isn't stable across all systems, so
+      revert to old system of doing nothing
+0.14  Tue Jul 03 16:40:00 GMT 2007
     - Allow SSH Transport to handle username prompts, courtesy of Nigel Bowden
     - Set Unix systems to automatically reap child processes
 0.13  Mon Jan 29 16:48:00 GMT 2007
