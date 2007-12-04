@@ -1,6 +1,6 @@
 =pod
 
-=head1 TITLE
+=head1 NAME
 
 Net::Appliance::Session::Cookbook::Recipe05 - Getting In To Enable Mode
 

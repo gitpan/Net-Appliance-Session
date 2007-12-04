@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    This document refers to version 0.16 of Net::Appliance::Session.
+    This document refers to version 0.17 of Net::Appliance::Session.
 
 SYNOPSIS
      use Net::Appliance::Session;

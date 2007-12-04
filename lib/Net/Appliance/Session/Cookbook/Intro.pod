@@ -34,11 +34,11 @@ which seemed to be just what I needed:
 
 =over 4
 
-=item C<Net::Appliance::Session>
+=item * C<Net::Appliance::Session>
 
-=item C<Net::SSH::W32Perl>
+=item * C<Net::SSH::W32Perl>
 
-=item C<Net::SSH>
+=item * C<Net::SSH>
 
 =back
 

@@ -1,6 +1,6 @@
 =pod
 
-=head1 TITLE
+=head1 NAME
 
 Net::Appliance::Session::Cookbook::Recipe04 - Not-So Simple Error Handling
 
@@ -177,7 +177,7 @@ So, we use the following code to test for and report on a failure:
  }
 
 Looking at the code snippet above, first of all we test to see if we've had a
-failure at all with the 'if ($@)' line - obviously if we haven't there's no
+failure at all with the C<if ($@)> line - obviously if we haven't there's no
 need to take any action other than carrying on with our script.
 
 If we have an error, we can see what type of exception has been raised. First

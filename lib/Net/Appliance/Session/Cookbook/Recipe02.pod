@@ -1,6 +1,6 @@
 =pod
 
-=head1 TITLE
+=head1 NAME
 
 Net::Appliance::Session::Cookbook::Recipe02 - Get Running Config with SSH
 

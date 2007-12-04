@@ -1,6 +1,6 @@
 =pod
 
-=head1 TITLE
+=head1 NAME
 
 Net::Appliance::Session::Cookbook::Recipe06 - Storing Device Configurations in
 Files
@@ -44,15 +44,15 @@ The script comprises two files:
 
 =over 4
 
-=item  Recipe_06.pl
+=item Recipe_06.pl
 
 The file below, in this Cookbook.
 
-=item  setup.ini
+=item setup.ini
 
 The initialization file that must be in the same directory as C<Recipe_06.pl>.
 
-=item  device_credentials.csv
+=item device_credentials.csv
 
 The CSV file whose location is configured in C<setup.ini>.
 
