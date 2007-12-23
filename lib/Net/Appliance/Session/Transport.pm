@@ -56,12 +56,21 @@ sub _connect_core {
 # time to work out why this code from Expect.pm works just fine and other
 # attempts using IO::Pty or Proc::Spawn do not.
 #
-# minor alterations to use CORE::close and raise_error
+# minor alterations to use CORE::close and raise_error, and to reap child
+
+sub REAPER {
+    my $waitedpid = wait;
+    $SIG{CHLD} = \&REAPER;
+}
 
 sub _spawn_command {
     my $self = shift;
     my @command = @_;
     my $pty = IO::Pty->new();
+
+    # try to install handler to reap children
+    $SIG{CHLD} = \&REAPER
+        if !defined $SIG{CHLD};
 
     # set up pipe to detect childs exec error
     pipe(STAT_RDR, STAT_WTR) or raise_error "Cannot open pipe: $!";
