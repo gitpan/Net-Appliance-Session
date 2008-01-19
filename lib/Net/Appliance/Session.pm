@@ -11,7 +11,7 @@ use base qw(
     Class::Data::Inheritable
 ); # eventually, would Moosify this ?
 
-our $VERSION = 0.18;
+our $VERSION = 0.19;
 
 use Net::Appliance::Session::Exceptions;
 use Net::Appliance::Phrasebook;
@@ -210,6 +210,9 @@ sub cmd {
     $self->error('Command response matched device error string')
         if $retvals[0] =~ eval 'qr'. $self->pb->fetch('err_string');
 
+    # Save the most recently matched prompt.
+    $self->last_prompt($retvals[1]);
+
     my @output;
     my $irs = $self->input_record_separator || "\n";
 
@@ -245,7 +248,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-This document refers to version 0.18 of Net::Appliance::Session.
+This document refers to version 0.19 of Net::Appliance::Session.
 
 =head1 SYNOPSIS
 
@@ -348,6 +351,10 @@ method.
 This method will return True if your interactive session is currently in
 privileged (or configure) mode, and False if it is not.
 
+Also, you can pass a True or False value to this method to "trick" the module
+and alter its behaviour. This is useful for performing secondary logins (see
+CPAN Forum).
+
 =head2 C<begin_configure>
 
 In order to enter configure mode, you must first have entered privileged mode,
@@ -363,6 +370,9 @@ To leave configure mode and return to privileged mode the use this method.
 
 This method will return True if your interactive session is currently in
 configure mode, and False if it is not.
+
+Also, you can pass a True or False value to this method to "trick" the module
+and alter its behaviour (see CPAN Forum).
 
 =head2 C<cmd>
 

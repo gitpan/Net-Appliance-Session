@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    This document refers to version 0.18 of Net::Appliance::Session.
+    This document refers to version 0.19 of Net::Appliance::Session.
 
 SYNOPSIS
      use Net::Appliance::Session;
@@ -103,6 +103,10 @@ METHODS
     This method will return True if your interactive session is currently in
     privileged (or configure) mode, and False if it is not.
 
+    Also, you can pass a True or False value to this method to "trick" the
+    module and alter its behaviour. This is useful for performing secondary
+    logins (see CPAN Forum).
+
   "begin_configure"
     In order to enter configure mode, you must first have entered privileged
     mode, using the "begin_privileged" method described above.
@@ -116,6 +120,9 @@ METHODS
   "in_configure_mode"
     This method will return True if your interactive session is currently in
     configure mode, and False if it is not.
+
+    Also, you can pass a True or False value to this method to "trick" the
+    module and alter its behaviour (see CPAN Forum).
 
   "cmd"
     Ordinarily, you might use this "Net::Telnet" method in scalar context to
