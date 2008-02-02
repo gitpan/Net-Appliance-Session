@@ -1,3 +1,6 @@
+0.21  Sat,  2 Feb 2008 19:12:28 +0000
+    - Send SIGKILL to child if we're running in cygwin
+    - Minor fix to typo in Cookbook
 0.19  Sat, 19 Jan 2008 21:51:29 +0000
     - Bug fix for not setting last prompt (thx miky)
     - Minor change to docs to mention setting in_foo_mode

@@ -125,7 +125,7 @@ You can install others (in addition) if you like, but these did the job for me.
 
 Once I had cygwin installed (including the Perl distribution that I included),
 I was all set to add in the modules that I wanted to try to use (e.g.
-L<Net::SSH::Appliance>).
+L<Net::Appliance::Session>).
 
 If you are familiar with Perl on Unix systems, then you will probably be very
 familiar with the CPAN shell to add modules into your perl distribution. Under

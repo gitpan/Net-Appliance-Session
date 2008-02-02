@@ -103,6 +103,9 @@ sub _spawn_command {
             raise_error "Cannot exec(@command): $!\n" if $^W;
             return undef;
         }
+
+        # store pid for killing if we're in cygwin
+        $self->childpid( $pid );
     }
     else { # child
         CORE::close STAT_RDR;

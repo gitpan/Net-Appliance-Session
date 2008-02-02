@@ -11,7 +11,7 @@ use base qw(
     Class::Data::Inheritable
 ); # eventually, would Moosify this ?
 
-our $VERSION = 0.19;
+our $VERSION = 0.21;
 
 use Net::Appliance::Session::Exceptions;
 use Net::Appliance::Phrasebook;
@@ -28,6 +28,7 @@ __PACKAGE__->mk_accessors(qw(
     do_privileged_mode
     do_configure_mode
     check_pb
+    childpid
 ));
 __PACKAGE__->follow_best_practice;
 __PACKAGE__->mk_accessors(qw(
@@ -143,6 +144,23 @@ sub close {
     $self->SUPER::close(@_);
 }
 
+# cygwin perl does not reap for some reason, so one solution
+# for now is to kill the child if it's still around when we are GC'd
+sub DESTROY {
+    my $self = shift;
+
+    # only applies to cygwin
+    return if $^O !~ m/win/i;
+
+    if (defined $self->childpid
+        and $self->childpid > 0
+        and (kill 0, $self->childpid) > 0) {
+
+        # print "SIGKILL to process ID ", $self->childpid, "\n";
+        kill 9, $self->childpid;
+    }
+}
+
 # need to override Net::Telnet::fhopen because it would obliterate our
 # private attributes otherwise.
 sub fhopen {
@@ -248,7 +266,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-This document refers to version 0.19 of Net::Appliance::Session.
+This document refers to version 0.21 of Net::Appliance::Session.
 
 =head1 SYNOPSIS
 
