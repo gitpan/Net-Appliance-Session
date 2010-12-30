@@ -1,4 +1,7 @@
 package Net::Appliance::Session::Exceptions;
+BEGIN {
+  $Net::Appliance::Session::Exceptions::VERSION = '2.103641';
+}
 
 use strict;
 use warnings FATAL => 'all';

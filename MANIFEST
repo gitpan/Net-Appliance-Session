@@ -1,4 +1,10 @@
 Changes
+LICENSE
+MANIFEST
+META.json
+META.yml
+Makefile.PL
+README
 examples/device_credentials.csv
 examples/example-1.pl
 examples/recipe01.pl
@@ -8,15 +14,6 @@ examples/recipe04.pl
 examples/recipe06.pl
 examples/recipe07.pl
 examples/setup.ini
-inc/Module/Install.pm
-inc/Module/Install/Base.pm
-inc/Module/Install/Can.pm
-inc/Module/Install/Fetch.pm
-inc/Module/Install/Makefile.pm
-inc/Module/Install/Metadata.pm
-inc/Module/Install/Win32.pm
-inc/Module/Install/WriteAll.pm
-INSTALL
 lib/Net/Appliance/Session.pm
 lib/Net/Appliance/Session/Cookbook.pod
 lib/Net/Appliance/Session/Cookbook/Intro.pod
@@ -30,14 +27,10 @@ lib/Net/Appliance/Session/Cookbook/Recipe07.pod
 lib/Net/Appliance/Session/Engine.pm
 lib/Net/Appliance/Session/Exceptions.pm
 lib/Net/Appliance/Session/Transport.pm
-lib/Net/Appliance/Session/Transport/Serial.pm
 lib/Net/Appliance/Session/Transport/SSH.pm
+lib/Net/Appliance/Session/Transport/Serial.pm
 lib/Net/Appliance/Session/Transport/Telnet.pm
 lib/Net/Appliance/Session/Util.pm
-Makefile.PL
-MANIFEST			This list of files
-META.yml
-README
 t/10-use.t
 t/pod-coverage.t
 t/pod.t

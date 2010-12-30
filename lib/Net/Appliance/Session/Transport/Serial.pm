@@ -1,4 +1,7 @@
 package Net::Appliance::Session::Transport::Serial;
+BEGIN {
+  $Net::Appliance::Session::Transport::Serial::VERSION = '2.103641';
+}
 
 use strict;
 use warnings FATAL => 'all';
@@ -39,7 +42,7 @@ sub _connect_core {
     my %args = @_;
 
     $args{parity} = 'none'        if !exists $args{parity};
-    $args{nostop} = 1             if !exists $args{nostop};
+    $args{nostop} = 0             if !exists $args{nostop};
     $args{line}   = '/dev/ttyS0'  if !exists $args{line};
     $args{speed}  = 9600          if !exists $args{speed};
     $args{sleep}  = 0             if !exists $args{sleep};
@@ -53,10 +56,10 @@ sub _connect_core {
     # start the cu session, and get a pty for it
     my $pty = $self->_spawn_command(
         $args{app},
-        ($args{nostop} ? '--nostop' : '' ),
-        '--line',   $args{Line},
-        '--parity', $args{Parity},
-        '--speed',  $args{Speed},
+        "--parity=$args{parity}",
+        '-l', $args{line},
+        '-s', $args{speed},
+        ($args{nostop} ? '--nostop' : () ),
     )
         or raise_error 'Unable to launch subprocess for serial line';
 
@@ -66,6 +69,14 @@ sub _connect_core {
     # wake the serial connection up
     sleep $args{sleep};
     $self->put("\r");
+
+    # rt.cpan#47214 check if we are already logged in by peeking the prompt
+    my ($l_prematch, $l_match) = $self->waitfor(
+        Match => $self->pb->fetch('prompt'),
+        Errmode    => 'return',
+        Timeout    => 5,
+    );
+    return $self if defined $l_match;
 
     # optionally, log in to the remote host
     if ($self->do_login) {
@@ -105,9 +116,19 @@ sub _connect_core {
 
 1;
 
+# ABSTRACT: Connections using a Serial Line
+
+
+__END__
+=pod
+
 =head1 NAME
 
-Net::Appliance::Session::Transport::Serial
+Net::Appliance::Session::Transport::Serial - Connections using a Serial Line
+
+=head1 VERSION
+
+version 2.103641
 
 =head1 SYNOPSIS
 
@@ -215,22 +236,14 @@ Ian Lance Taylor's C<cu> application installed.
 
 =head1 AUTHOR
 
-Oliver Gorwits C<< <oliver.gorwits@oucs.ox.ac.uk> >>
+Oliver Gorwits <oliver@cpan.org>
 
-=head1 COPYRIGHT & LICENSE
+=head1 COPYRIGHT AND LICENSE
 
-Copyright (c) The University of Oxford 2006. All Rights Reserved.
+This software is copyright (c) 2010 by University of Oxford.
 
-This program is free software; you can redistribute it and/or modify it under
-the terms of version 2 of the GNU General Public License as published by the
-Free Software Foundation.
-
-This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
-St, Fifth Floor, Boston, MA 02110-1301 USA
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
+

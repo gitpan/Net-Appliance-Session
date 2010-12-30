@@ -1,4 +1,7 @@
 package Net::Appliance::Session::Util;
+BEGIN {
+  $Net::Appliance::Session::Util::VERSION = '2.103641';
+}
 
 use strict;
 use warnings FATAL => 'all';

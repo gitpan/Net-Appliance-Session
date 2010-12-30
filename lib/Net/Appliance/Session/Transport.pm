@@ -1,4 +1,7 @@
 package Net::Appliance::Session::Transport;
+BEGIN {
+  $Net::Appliance::Session::Transport::VERSION = '2.103641';
+}
 
 use strict;
 use warnings FATAL => 'all';
@@ -147,9 +150,19 @@ sub _spawn_command {
 
 1;
 
+# ABSTRACT: Base class for Session Transports
+
+
+__END__
+=pod
+
 =head1 NAME
 
-Net::Appliance::Session::Transport
+Net::Appliance::Session::Transport - Base class for Session Transports
+
+=head1 VERSION
+
+version 2.103641
 
 =head1 DESCRIPTION
 
@@ -183,27 +196,14 @@ copyright Roland Giersig and/or Austin Schutz.
 
 =head1 AUTHOR
 
-Oliver Gorwits C<< <oliver.gorwits@oucs.ox.ac.uk> >>
+Oliver Gorwits <oliver@cpan.org>
 
-=head1 COPYRIGHT & LICENSE
+=head1 COPYRIGHT AND LICENSE
 
-Copyright (c) The University of Oxford 2006. All Rights Reserved.
+This software is copyright (c) 2010 by University of Oxford.
 
-This program is free software; you can redistribute it and/or modify it
-under
-the terms of version 2 of the GNU General Public License as published by the
-Free Software Foundation.
-
-This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-details.
-
-You should have received a copy of the GNU General Public License along with
-this program; if not, write to the Free Software Foundation, Inc., 51
-Franklin
-St, Fifth Floor, Boston, MA 02110-1301 USA
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 

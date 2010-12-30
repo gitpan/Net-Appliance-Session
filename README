@@ -3,11 +3,12 @@ NAME
     appliances
 
 VERSION
-    This document refers to version 1.36 of Net::Appliance::Session.
+    version 2.103641
 
 SYNOPSIS
      use Net::Appliance::Session;
      my $s = Net::Appliance::Session->new('hostname.example');
+     $s->privileged_paging(1); # if using ASA/PIX OS 7+
 
      eval {
          $s->connect(Name => 'username', Password => 'loginpass');
@@ -241,6 +242,12 @@ CONFIGURATION
     pager management command with a value for the number of output lines per
     page. Pass this method a value to override the default of 24.
 
+   "privileged_paging"
+    On some series of devices, in particular the Cisco ASA and PIXOS7+ you
+    must be in privileged mode in order to alter the pager. If that is the
+    case for your device, call this method with a true value to instruct the
+    module to better manage the situation.
+
   Command mode
     If your target device does not have the concept of "privileged exec" or
     "configure" mode, then just don't call the methods to change into those
@@ -289,15 +296,15 @@ CONFIGURATION
     for the following operating systems:
 
      IOS     # the default
-  
-     Aironet # currently the same as the default
+      
+ Aironet # currently the same as the default
      CATOS   # for older, pre-IOS Cisco devices
      PIXOS   # for PIX OS-based devices
      PIXOS7  # Slightly different commands from other PIXOS versions
      FWSM    # currently the same as 'PIXOS'
      FWSM3   # for FWSM Release 3.x devices (slightly different to FWSM 2.x)
-  
-     JUNOS   # Juniper JUNOS support
+      
+ JUNOS   # Juniper JUNOS support
      HP      # Basic HP support
      Nortel  # Basic Nortel support
 
@@ -454,17 +461,17 @@ DEPENDENCIES
 
     *   IO::Interactive
 
-AUTHOR
-    Oliver Gorwits "<oliver.gorwits@oucs.ox.ac.uk>"
-
 ACKNOWLEDGEMENTS
     Parts of this module are based on the work of Robin Stevens and Roger
     Treweek. The command spawning code was based on that in "Expect.pm" and
     is copyright Roland Giersig and/or Austin Schutz.
 
-COPYRIGHT & LICENSE
-    Copyright (c) The University of Oxford 2008.
+AUTHOR
+    Oliver Gorwits <oliver@cpan.org>
 
-    This library is free software; you can redistribute it and/or modify it
-    under the same terms as Perl itself.
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2010 by University of Oxford.
+
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
 

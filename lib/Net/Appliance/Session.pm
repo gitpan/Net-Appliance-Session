@@ -1,4 +1,7 @@
 package Net::Appliance::Session;
+BEGIN {
+  $Net::Appliance::Session::VERSION = '2.103641';
+}
 
 use strict;
 use warnings FATAL => 'all';
@@ -10,9 +13,6 @@ use base qw(
     Class::Accessor::Fast::Contained
     Class::Data::Inheritable
 ); # eventually, would Moosify this ?
-
-our $VERSION = '1.36';
-$VERSION = eval $VERSION; # numify for warning-free dev releases
 
 use Net::Appliance::Session::Exceptions;
 use Net::Appliance::Session::Util;
@@ -29,10 +29,12 @@ __PACKAGE__->mk_accessors(qw(
     do_login
     do_privileged_mode
     do_configure_mode
+    privileged_paging
     check_pb
     childpid
     fail_with_repl
     last_command_sent
+    close_called
 ));
 __PACKAGE__->follow_best_practice;
 __PACKAGE__->mk_accessors(qw(
@@ -126,7 +128,9 @@ sub new {
     $self->do_login(1);
     $self->do_privileged_mode(1);
     $self->do_configure_mode(1);
+    $self->privileged_paging(0);
     $self->last_command_sent('');
+    $self->close_called(0);
 
     return $self;
 }
@@ -135,6 +139,10 @@ sub new {
 # of any nested modes correctly
 sub close {
     my $self = shift;
+
+    # protect against death spiral (rt.cpan #53796)
+    return if $self->close_called;
+    $self->close_called(1);
 
     my $caller = ( caller(1) )[3];
 
@@ -255,7 +263,8 @@ sub cmd {
     $self->last_command_sent($string); # to pass to error handler
     my $completion = ($string =~ s/\?$//); # command line completion?
 
-    $self->put($string . ($completion ? $self->pb->fetch('completion') : "\n"))
+    $self->put($string . ($completion ? $self->pb->fetch('completion')
+                                      : $self->output_record_separator))
         or $self->error('Incomplete command write: only '.
                         $self->print_length .' bytes have been sent');
 
@@ -304,18 +313,25 @@ sub cmd {
 
 1;
 
+# ABSTRACT: Run command-line sessions to network appliances
+
+
+__END__
+=pod
+
 =head1 NAME
 
 Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-This document refers to version 1.36 of Net::Appliance::Session.
+version 2.103641
 
 =head1 SYNOPSIS
 
  use Net::Appliance::Session;
  my $s = Net::Appliance::Session->new('hostname.example');
+ $s->privileged_paging(1); # if using ASA/PIX OS 7+
 
  eval {
      $s->connect(Name => 'username', Password => 'loginpass');
@@ -574,6 +590,13 @@ Likewise, to re-enable paging Net::Appliance::Session will call the pager
 management command with a value for the number of output lines per page. Pass
 this method a value to override the default of 24.
 
+=head3 C<privileged_paging>
+
+On some series of devices, in particular the Cisco ASA and PIXOS7+ you must be
+in privileged mode in order to alter the pager. If that is the case for your
+device, call this method with a true value to instruct the module to better
+manage the situation.
+
 =head2 Command mode
 
 If your target device does not have the concept of "privileged exec" or
@@ -815,21 +838,22 @@ L<IO::Interactive>
 
 =back
 
-=head1 AUTHOR
-
-Oliver Gorwits C<< <oliver.gorwits@oucs.ox.ac.uk> >>
-
 =head1 ACKNOWLEDGEMENTS
 
 Parts of this module are based on the work of Robin Stevens and Roger Treweek.
 The command spawning code was based on that in C<Expect.pm> and is copyright
 Roland Giersig and/or Austin Schutz.
 
-=head1 COPYRIGHT & LICENSE
+=head1 AUTHOR
 
-Copyright (c) The University of Oxford 2008.
+Oliver Gorwits <oliver@cpan.org>
 
-This library is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by University of Oxford.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
+
