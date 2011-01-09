@@ -30,4 +30,4 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Net-Appliance-Session
   homepage: https://github.com/ollyg/Net-Appliance-Session/wiki
   repository: git://github.com/ollyg/Net-Appliance-Session.git
-version: 2.103641
+version: 2.110090

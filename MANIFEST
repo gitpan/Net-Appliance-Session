@@ -32,5 +32,4 @@ lib/Net/Appliance/Session/Transport/Serial.pm
 lib/Net/Appliance/Session/Transport/Telnet.pm
 lib/Net/Appliance/Session/Util.pm
 t/10-use.t
-t/pod-coverage.t
 t/pod.t

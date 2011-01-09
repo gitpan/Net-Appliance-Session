@@ -1,6 +1,6 @@
 package Net::Appliance::Session;
 BEGIN {
-  $Net::Appliance::Session::VERSION = '2.103641';
+  $Net::Appliance::Session::VERSION = '2.110090';
 }
 
 use strict;
@@ -194,7 +194,21 @@ sub fhopen {
     ## Restore our private data.
     *$self->{ref $self} = $s;
 
+    ## Reset close_called
+    $self->close_called(0);
+
     return $r;
+}
+
+## Override Net::Telnet::open to reset close_called
+sub open {
+  my ($self, @args) = @_;
+  my $ok = $self->SUPER::open(@args);
+
+  ## Reset close_called
+  $self->close_called(0);
+
+  return $ok;
 }
 
 # override Net::Telnet::error(), which is a little tricky...
@@ -325,7 +339,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-version 2.103641
+version 2.110090
 
 =head1 SYNOPSIS
 
@@ -850,7 +864,7 @@ Oliver Gorwits <oliver@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2010 by University of Oxford.
+This software is copyright (c) 2011 by University of Oxford.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
