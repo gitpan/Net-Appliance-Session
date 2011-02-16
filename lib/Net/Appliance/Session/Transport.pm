@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Transport;
 BEGIN {
-  $Net::Appliance::Session::Transport::VERSION = '2.110090';
+  $Net::Appliance::Session::Transport::VERSION = '2.110470';
 }
 
 use strict;
@@ -162,7 +162,7 @@ Net::Appliance::Session::Transport - Base class for Session Transports
 
 =head1 VERSION
 
-version 2.110090
+version 2.110470
 
 =head1 DESCRIPTION
 

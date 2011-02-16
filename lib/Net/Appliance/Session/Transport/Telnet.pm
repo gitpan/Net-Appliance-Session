@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Transport::Telnet;
 BEGIN {
-  $Net::Appliance::Session::Transport::Telnet::VERSION = '2.110090';
+  $Net::Appliance::Session::Transport::Telnet::VERSION = '2.110470';
 }
 
 use strict;
@@ -91,7 +91,7 @@ Net::Appliance::Session::Transport::Telnet - Connections using TELNET
 
 =head1 VERSION
 
-version 2.110090
+version 2.110470
 
 =head1 SYNOPSIS
 

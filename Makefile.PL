@@ -35,7 +35,7 @@ my %WriteMakefileArgs = (
     'Symbol' => '0',
     'UNIVERSAL::require' => '0'
   },
-  'VERSION' => '2.110090',
+  'VERSION' => '2.110470',
   'test' => {
     'TESTS' => 't/*.t'
   }

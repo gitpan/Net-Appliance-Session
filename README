@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    version 2.110090
+    version 2.110470
 
 SYNOPSIS
      use Net::Appliance::Session;

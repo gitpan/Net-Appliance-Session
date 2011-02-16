@@ -1,6 +1,6 @@
 package Net::Appliance::Session;
 BEGIN {
-  $Net::Appliance::Session::VERSION = '2.110090';
+  $Net::Appliance::Session::VERSION = '2.110470';
 }
 
 use strict;
@@ -143,6 +143,10 @@ sub close {
     # protect against death spiral (rt.cpan #53796)
     return if $self->close_called;
     $self->close_called(1);
+
+    # Just return if we're in an open session. (rt.cpan #65453)
+    my $s = *$self->{net_telnet};
+    return unless $s->{opened};
 
     my $caller = ( caller(1) )[3];
 
@@ -339,7 +343,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-version 2.110090
+version 2.110470
 
 =head1 SYNOPSIS
 
