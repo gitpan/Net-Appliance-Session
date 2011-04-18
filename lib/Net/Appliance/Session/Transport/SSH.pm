@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Transport::SSH;
 BEGIN {
-  $Net::Appliance::Session::Transport::SSH::VERSION = '2.110470';
+  $Net::Appliance::Session::Transport::SSH::VERSION = '2.111080';
 }
 
 use strict;
@@ -112,7 +112,7 @@ Net::Appliance::Session::Transport::SSH - Connections using SSH
 
 =head1 VERSION
 
-version 2.110470
+version 2.111080
 
 =head1 SYNOPSIS
 

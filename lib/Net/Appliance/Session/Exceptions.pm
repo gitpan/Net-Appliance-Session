@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Exceptions;
 BEGIN {
-  $Net::Appliance::Session::Exceptions::VERSION = '2.110470';
+  $Net::Appliance::Session::Exceptions::VERSION = '2.111080';
 }
 
 use strict;

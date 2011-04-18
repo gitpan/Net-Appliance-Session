@@ -4,7 +4,7 @@
       "Oliver Gorwits <oliver@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.200000, CPAN::Meta::Converter version 2.102400",
+   "generated_by" : "Dist::Zilla version 4.200004, CPAN::Meta::Converter version 2.102400",
    "license" : [
       "perl_5"
    ],
@@ -53,6 +53,6 @@
          "web" : "https://github.com/ollyg/Net-Appliance-Session"
       }
    },
-   "version" : "2.110470"
+   "version" : "2.111080"
 }
 

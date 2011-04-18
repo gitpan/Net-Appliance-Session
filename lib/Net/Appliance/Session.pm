@@ -1,6 +1,6 @@
 package Net::Appliance::Session;
 BEGIN {
-  $Net::Appliance::Session::VERSION = '2.110470';
+  $Net::Appliance::Session::VERSION = '2.111080';
 }
 
 use strict;
@@ -343,7 +343,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-version 2.110470
+version 2.111080
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Transport::Serial;
 BEGIN {
-  $Net::Appliance::Session::Transport::Serial::VERSION = '2.110470';
+  $Net::Appliance::Session::Transport::Serial::VERSION = '2.111080';
 }
 
 use strict;
@@ -128,7 +128,7 @@ Net::Appliance::Session::Transport::Serial - Connections using a Serial Line
 
 =head1 VERSION
 
-version 2.110470
+version 2.111080
 
 =head1 SYNOPSIS
 

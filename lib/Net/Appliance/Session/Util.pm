@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Util;
 BEGIN {
-  $Net::Appliance::Session::Util::VERSION = '2.110470';
+  $Net::Appliance::Session::Util::VERSION = '2.111080';
 }
 
 use strict;

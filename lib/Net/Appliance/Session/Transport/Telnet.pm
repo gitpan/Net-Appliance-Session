@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Transport::Telnet;
 BEGIN {
-  $Net::Appliance::Session::Transport::Telnet::VERSION = '2.110470';
+  $Net::Appliance::Session::Transport::Telnet::VERSION = '2.111080';
 }
 
 use strict;
@@ -69,8 +69,16 @@ sub _connect_core {
         $self->print($args{password});
     }
 
-    $self->waitfor($self->prompt)
+    my $login_done;
+    (undef, $login_done) = $self->waitfor(
+        Match => $self->prompt,
+        Match => $self->pb->fetch('userpass_prompt'),
+    )
         or $self->error('Login failed to remote host');
+
+    if ($login_done =~ eval 'qr' . $self->pb->fetch('userpass_prompt')) {
+        $self->error('Authentication failed to remote host');
+    }
 
     return $self;
 }
@@ -91,7 +99,7 @@ Net::Appliance::Session::Transport::Telnet - Connections using TELNET
 
 =head1 VERSION
 
-version 2.110470
+version 2.111080
 
 =head1 SYNOPSIS
 
