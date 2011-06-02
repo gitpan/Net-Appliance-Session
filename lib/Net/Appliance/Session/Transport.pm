@@ -1,47 +1,63 @@
 package Net::Appliance::Session::Transport;
 BEGIN {
-  $Net::Appliance::Session::Transport::VERSION = '2.111080';
+  $Net::Appliance::Session::Transport::VERSION = '3.111530';
 }
 
-use strict;
-use warnings FATAL => 'all';
+{
+    package # hide from pause
+        Net::Appliance::Session::Transport::ConnectOptions;
+    use Moose;
 
-use Net::Appliance::Session::Exceptions;
-use Net::Appliance::Session::Util;
-use Net::Telnet;
-use FileHandle;
-use IO::Pty;
-use POSIX qw(WNOHANG);
+    has username => (
+        is => 'ro',
+        isa => 'Str',
+        required => 0,
+        predicate => 'has_username',
+    );
 
-# ===========================================================================
-# base class for transports - just a Net::Telnet instance factory, really.
-
-sub new {
-    my $class = shift;
-    return Net::Telnet->new(
-        @_,
-        Errmode => 'return',
+    has password => (
+        is => 'ro',
+        isa => 'Str',
+        required => 0,
+        predicate => 'has_password',
     );
 }
 
+use Moose::Role;
+
 sub connect {
     my $self = shift;
+    my $options = Net::Appliance::Session::Transport::ConnectOptions->new(@_);
 
-    # interpret params into hash
-    if (scalar @_ % 2) {
-        raise_error 'Odd number of arguments to connect()';
+    # poke remote device (whether logging in or not)
+    $self->find_prompt($self->wake_up);
+
+    # optionally, log in to the remote host
+    if ($self->do_login and not $self->prompt_looks_like('prompt')) {
+
+        if ($self->prompt_looks_like('user')) {
+            die 'a set username is required to connect to this host'
+                if not $options->has_username;
+
+            $self->cmd($options->username, { match => 'pass' });
+        }
+
+        die 'a set password is required to connect to this host'
+            if not $options->has_password;
+
+        $self->cmd($options->password, { match => 'prompt' });
+
+        $self->set_username($options->username)
+            if $options->has_username and not $self->get_username;
+
+        $self->set_password($options->password)
+            if $options->has_password and not $self->get_password;
     }
-    my %args = _normalize(@_);
 
-    $self->_connect_core( %args );
+    $self->prompt_looks_like('prompt')
+        or die 'login failed to remote host - prompt does not match';
 
-    if (! $self->get_username and exists $args{name}) {
-        $self->set_username($args{name});
-    }
-    if (! $self->get_password and exists $args{password}) {
-        $self->set_password($args{password});
-    }
-
+    $self->close_called(0);
     $self->logged_in(1);
 
     $self->in_privileged_mode( $self->do_privileged_mode ? 0 : 1 );
@@ -53,157 +69,23 @@ sub connect {
     return $self;
 }
 
-sub disconnect {
-    return shift; # a noop unless overridden in the Transport subclass
-}
-
-sub _connect_core { 
-    raise_error 'Incomplete Transport or there is no Transport loaded!';
-}
-
-# this code is based on that in Expect.pm, and found to be the most reliable.
-# minor alterations to use CORE::close and raise_error, and to reap child.
-
-sub REAPER {
-    # http://www.perlmonks.org/?node_id=10516
-    my $stiff;
-    1 while (($stiff = waitpid(-1, &WNOHANG)) > 0);
-    $SIG{CHLD} = \&REAPER;
-}
-
-sub _spawn_command {
+sub close {
     my $self = shift;
-    my @command = @_;
-    my $pty = IO::Pty->new();
 
-    # try to install handler to reap children
-    $SIG{CHLD} = \&REAPER
-        if !defined $SIG{CHLD};
+    # protect against death spiral (rt.cpan #53796)
+    return if $self->close_called;
+    $self->close_called(1);
 
-    # set up pipe to detect childs exec error
-    pipe(STAT_RDR, STAT_WTR) or raise_error "Cannot open pipe: $!";
-    STAT_WTR->autoflush(1);
-    eval {
-        fcntl(STAT_WTR, F_SETFD, FD_CLOEXEC);
-    };
+    $self->end_configure
+        if $self->do_configure_mode and $self->in_configure_mode;
+    $self->end_privileged
+        if $self->do_privileged_mode and $self->in_privileged_mode;
 
-    my $pid = fork;
+    # re-enable paging
+    $self->enable_paging if $self->do_paging;
 
-    if (! defined ($pid)) {
-        raise_error "Cannot fork: $!" if $^W;
-        return undef;
-    }
-
-    if($pid) { # parent
-        my $errno;
-
-        CORE::close STAT_WTR;
-        $pty->close_slave();
-        $pty->set_raw();
-
-        # now wait for child exec (eof due to close-on-exit) or exec error
-        my $errstatus = sysread(STAT_RDR, $errno, 256);
-        raise_error "Cannot sync with child: $!" if not defined $errstatus;
-        CORE::close STAT_RDR;
-        
-        if ($errstatus) {
-            $! = $errno+0;
-            raise_error "Cannot exec(@command): $!\n" if $^W;
-            return undef;
-        }
-
-        # store pid for killing if we're in cygwin
-        $self->childpid( $pid );
-    }
-    else { # child
-        CORE::close STAT_RDR;
-
-        $pty->make_slave_controlling_terminal();
-        my $slv = $pty->slave()
-            or raise_error "Cannot get slave: $!";
-
-        $slv->set_raw();
-        
-        CORE::close($pty);
-
-        CORE::close(STDIN);
-        open(STDIN,"<&". $slv->fileno())
-            or raise_error "Couldn't reopen STDIN for reading, $!\n";
- 
-        CORE::close(STDOUT);
-        open(STDOUT,">&". $slv->fileno())
-            or raise_error "Couldn't reopen STDOUT for writing, $!\n";
-
-        CORE::close(STDERR);
-        open(STDERR,">&". $slv->fileno())
-            or raise_error "Couldn't reopen STDERR for writing, $!\n";
-
-        { exec(@command) };
-        print STAT_WTR $!+0;
-        raise_error "Cannot exec(@command): $!\n";
-    }
-
-    return $pty;
+    $self->nci->disconnect;
+    $self->logged_in(0);
 }
-
-# ===========================================================================
 
 1;
-
-# ABSTRACT: Base class for Session Transports
-
-
-__END__
-=pod
-
-=head1 NAME
-
-Net::Appliance::Session::Transport - Base class for Session Transports
-
-=head1 VERSION
-
-version 2.111080
-
-=head1 DESCRIPTION
-
-This package is the base class for all C<< Net::Appliance::Session >>
-Transports. It is effectively a C<< Net::Telnet >> factory, which then calls
-upon a derived class to do something with the guts of the TELNET connection
-(perhaps rip it out and shove an SSH connection in there instead).
-
-=head1 AVAILABLE TRANSPORTS
-
-=over 4
-
-=item *
-
-L<Net::Appliance::Session::Transport::Serial>
-
-=item *
-
-L<Net::Appliance::Session::Transport::SSH>
-
-=item *
-
-L<Net::Appliance::Session::Transport::Telnet>
-
-=back
-
-=head1 ACKNOWLEDGEMENTS
-
-The SSH command spawning code was based on that in C<Expect.pm> and is
-copyright Roland Giersig and/or Austin Schutz.
-
-=head1 AUTHOR
-
-Oliver Gorwits <oliver@cpan.org>
-
-=head1 COPYRIGHT AND LICENSE
-
-This software is copyright (c) 2011 by University of Oxford.
-
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
-
-=cut
-
