@@ -23,7 +23,8 @@
          "requires" : {
             "Moose" : 0,
             "Moose::Role" : 0,
-            "Net::CLI::Interact" : 0
+            "Net::CLI::Interact" : 0,
+            "overload" : 0
          }
       },
       "test" : {
@@ -44,6 +45,6 @@
          "web" : "https://github.com/ollyg/Net-Appliance-Session"
       }
    },
-   "version" : "3.111530"
+   "version" : "3.111590"
 }
 

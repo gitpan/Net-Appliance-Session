@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    version 3.111530
+    version 3.111590
 
 IMPORTANT NOTE ABOUT UPGRADING FROM VERSION 2.x
     Between version 2.x and 3.x of this module the programmer's interface
@@ -15,7 +15,7 @@ SYNOPSIS
      use Net::Appliance::Session;
  
      my $s = Net::Appliance::Session->new({
-         personality => 'cisco',
+         personality => 'ios',
          transport => 'SSH',
          host => 'hostname.example',
          privileged_paging => 1, # only if using ASA/PIX OS 7+
@@ -23,9 +23,9 @@ SYNOPSIS
      });
  
      eval {
-         $s->connect({name => 'username', password => 'loginpass'});
+         $s->connect({ username => 'username', password => 'loginpass' });
  
-         $s->begin_privileged('privilegedpass');
+         $s->begin_privileged({ password => 'privilegedpass' });
          print $s->cmd('show access-list');
          $s->end_privileged;
      };
@@ -41,10 +41,9 @@ DESCRIPTION
     mode and "configure" mode, along with the ability to send commands to
     the connected device and retrieve returned output.
 
-    There are other CPAN modules that cover similar ground, including
-    Net::SSH and Net::Telnet::Cisco, but they are less robust or do not
-    handle native SSH, Telnet and Serial Line connections with a single
-    interface on both Unix and Windows platforms.
+    There are other CPAN modules that cover similar ground, but they are
+    less robust and do not handle native SSH, Telnet and Serial Line
+    connections with a single interface on both Unix and Windows platforms.
 
     Built-in commands come from a phrasebook which supports many network
     device vendors (Cisco, HP, etc) or you can install a new phrasebook.
@@ -52,14 +51,15 @@ DESCRIPTION
     behaviours.
 
 METHODS
-    As in the synopsis above, the first step is to create a new instance. As
-    in the synopsis above, recommended practice is to wrap all other method
-    calls in a Perl "eval" block to catch errors (typically time-outs
-    waiting for CLI response).
+    As in the synopsis above, the first step is to create a new instance.
+    Recommended practice is to wrap all other method calls in a Perl "eval"
+    block to catch errors (typically time-outs waiting for CLI response).
+    For a demonstration of usage, see the example script shipped with this
+    distribution.
 
   Net::Appliance::Session->new( \%options )
      my $s = Net::Appliance::Session->new({
-         personality => 'cisco',
+         personality => 'ios',
          transport => 'SSH',
          host => 'hostname.example',
      });
@@ -69,9 +69,9 @@ METHODS
 
     "personality => $name" (required)
         Tells the module which "language" to use when talking to the
-        connected device, for example "cisco" for Cisco IOS devices. There's
-        a list of all the supported platforms in the Phrasebook
-        documentation. It's also possible to write new phrasebooks.
+        connected device, for example "ios" for Cisco IOS devices. There's a
+        list of all the supported platforms in the Phrasebook documentation.
+        It's also possible to write new phrasebooks.
 
     "transport => $backend" (required)
         The name of the transport backend used for the session, which may be
@@ -118,7 +118,7 @@ METHODS
         prompt. and you don't pass the username a Perl exception will be
         thrown.
 
-        The password is cached within the module for possbible use later on
+        The password is cached within the module for possible use later on
         when entering "privileged" mode.
 
   begin_privileged and end_privileged
@@ -231,7 +231,7 @@ DIAGNOSTICS
     To see a log of all the processes within this module, and a copy of all
     data sent to and received from the device, call the following method:
 
-     $s->set_global_log_at( 'debug' );
+     $s->set_global_log_at('debug');
 
     In place of "debug" you can have other log levels, and via the embedded
     Logger at "$s->nci->logger" it's possible to finely control the
