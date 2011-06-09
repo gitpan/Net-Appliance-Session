@@ -1,6 +1,6 @@
 package Net::Appliance::Session::APIv2;
 BEGIN {
-  $Net::Appliance::Session::APIv2::VERSION = '3.111590';
+  $Net::Appliance::Session::APIv2::VERSION = '3.111600';
 }
 
 use Moose;
@@ -18,7 +18,7 @@ sub BUILDARGS {
         return {
             host => $params[0],
             personality => 'ios',
-            transport => 'ssh',
+            transport => 'SSH',
         };
     }
 
@@ -203,6 +203,50 @@ sub _wrap {
     else {
         return wantarray ? @ret : $ret;
     }
+}
+
+foreach my $name (qw/
+    binmode
+    break
+    buffer
+    buffer_empty
+    cmd_remove_mode
+    dump_log
+    eof
+    errmode
+    errmsg
+    fhopen
+    get
+    getline
+    getlines
+    input_record_separator
+    last_prompt
+    lastline
+    login
+    max_buffer_length
+    ofs
+    option_accept
+    option_callback
+    option_log
+    option_send
+    option_state
+    ors
+    output_field_separator
+    output_log
+    output_record_separator
+    port
+    print_length
+    prompt
+    put
+    rs
+    telnetmode
+    timed_out
+    waitfor
+/) {
+    __PACKAGE__->meta->add_method($name, sub {
+        my $self = shift;
+        return $self->nci->transport->wrapper->$name(@_);
+    });
 }
 
 1;

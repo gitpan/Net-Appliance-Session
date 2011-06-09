@@ -27,7 +27,7 @@ my %WriteMakefileArgs = (
     'Net::CLI::Interact' => '0',
     'overload' => '0'
   },
-  'VERSION' => '3.111590',
+  'VERSION' => '3.111600',
   'test' => {
     'TESTS' => 't/*.t'
   }
