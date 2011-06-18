@@ -1,6 +1,6 @@
 package Net::Appliance::Session;
 BEGIN {
-  $Net::Appliance::Session::VERSION = '3.111600';
+  $Net::Appliance::Session::VERSION = '3.111690';
 }
 
 use Moose;
@@ -78,7 +78,7 @@ foreach my $slot (qw/
 
 has 'connect_options' => (
     is => 'ro',
-    isa => 'HashRef[Str]',
+    isa => 'HashRef',
     required => 0,
     default => sub { {} },
 );
@@ -126,7 +126,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-version 3.111600
+version 3.111690
 
 =head1 IMPORTANT NOTE ABOUT UPGRADING FROM VERSION 2.x
 
@@ -397,6 +397,19 @@ to finely control the diagnostics.
 =head1 INTERNALS
 
 See L<Net::CLI::Interact>.
+
+=head1 THANKS
+
+The following people have kindly reported bugs with patches or contributed to
+the development in some other way:
+
+=over 4
+
+=item *
+
+Carlos Vicente
+
+=back
 
 =head1 AUTHOR
 

@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    version 3.111600
+    version 3.111690
 
 IMPORTANT NOTE ABOUT UPGRADING FROM VERSION 2.x
     Between version 2.x and 3.x of this module the programmer's interface
@@ -239,6 +239,12 @@ DIAGNOSTICS
 
 INTERNALS
     See Net::CLI::Interact.
+
+THANKS
+    The following people have kindly reported bugs with patches or
+    contributed to the development in some other way:
+
+    *   Carlos Vicente
 
 AUTHOR
     Oliver Gorwits <oliver@cpan.org>
