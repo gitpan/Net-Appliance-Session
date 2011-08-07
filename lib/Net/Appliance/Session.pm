@@ -1,6 +1,6 @@
 package Net::Appliance::Session;
-BEGIN {
-  $Net::Appliance::Session::VERSION = '3.111690';
+{
+  $Net::Appliance::Session::VERSION = '3.112190';
 }
 
 use Moose;
@@ -67,6 +67,7 @@ foreach my $slot (qw/
 foreach my $slot (qw/
     host
     app
+    add_library
 /) {
     has $slot => (
         is => 'ro',
@@ -95,7 +96,6 @@ has 'nci' => (
         set_global_log_at
         prompt_looks_like
         find_prompt
-        add_library
     /],
 );
 
@@ -109,6 +109,7 @@ sub _build_nci {
         personality => $self->personality,
         connect_options => $self->connect_options,
         ($self->has_app ? (app => $self->app) : ()),
+        ($self->has_add_library ? (add_library => $self->add_library) : ()),
     });
 }
 
@@ -126,7 +127,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-version 3.111690
+version 3.112190
 
 =head1 IMPORTANT NOTE ABOUT UPGRADING FROM VERSION 2.x
 
@@ -224,6 +225,14 @@ name of the target device in this parameter.
 Some of the transport backends can take their own options. For example with a
 serial line connection you might specify the port speed, etc. See the
 respective manual pages for each transport backend for further details.
+
+=item C<< add_library => $directory >>
+
+If you've added to the built-in phrasebook with your own macros, then use
+this option to load your new phrasebook file(s). The path here should be the
+root within which the personality is installed, such as:
+
+ ${directory}/cisco/ios/pb
 
 =back
 

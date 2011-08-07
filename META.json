@@ -4,7 +4,7 @@
       "Oliver Gorwits <oliver@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.200000, CPAN::Meta::Converter version 2.102400",
+   "generated_by" : "Dist::Zilla version 4.200013, CPAN::Meta::Converter version 2.112150",
    "license" : [
       "perl_5"
    ],
@@ -16,7 +16,7 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "6.31"
+            "ExtUtils::MakeMaker" : "6.30"
          }
       },
       "runtime" : {
@@ -45,6 +45,6 @@
          "web" : "https://github.com/ollyg/Net-Appliance-Session"
       }
    },
-   "version" : "3.111690"
+   "version" : "3.112190"
 }
 
