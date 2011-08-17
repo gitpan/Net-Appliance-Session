@@ -1,6 +1,6 @@
 package Net::Appliance::Session;
 {
-  $Net::Appliance::Session::VERSION = '3.112190';
+  $Net::Appliance::Session::VERSION = '3.112290';
 }
 
 use Moose;
@@ -91,6 +91,7 @@ has 'nci' => (
     handles => [qw/
         cmd
         macro
+        last_prompt
         last_response
         set_phrasebook
         set_global_log_at
@@ -127,7 +128,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-version 3.112190
+version 3.112290
 
 =head1 IMPORTANT NOTE ABOUT UPGRADING FROM VERSION 2.x
 

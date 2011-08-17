@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Transport;
 {
-  $Net::Appliance::Session::Transport::VERSION = '3.112190';
+  $Net::Appliance::Session::Transport::VERSION = '3.112290';
 }
 
 {

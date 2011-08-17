@@ -1,6 +1,6 @@
 package Net::Appliance::Session::APIv2;
 {
-  $Net::Appliance::Session::APIv2::VERSION = '3.112190';
+  $Net::Appliance::Session::APIv2::VERSION = '3.112290';
 }
 
 use Moose;
@@ -220,7 +220,6 @@ foreach my $name (qw/
     getline
     getlines
     input_record_separator
-    last_prompt
     lastline
     login
     max_buffer_length
