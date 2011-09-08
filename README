@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    version 3.112290
+    version 3.112510
 
 IMPORTANT NOTE ABOUT UPGRADING FROM VERSION 2.x
     Between version 2.x and 3.x of this module the programmer's interface
@@ -128,6 +128,15 @@ METHODS
 
         The password is cached within the module for possible use later on
         when entering "privileged" mode.
+
+    "privileged_password => $secret" (optional)
+        In the situation where you've activated "privileged paging", yet
+        your device uses a different password for privileged mode than
+        login, you'll need to set that other password here.
+
+        Otherwise, because the module tries to disable paging, it first goes
+        into privileged mode as you instructed, and fails with the wrong
+        (login) password.
 
   begin_privileged and end_privileged
      $s->begin_privileged;
