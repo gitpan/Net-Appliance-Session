@@ -1,6 +1,6 @@
 package Net::Appliance::Session::APIv2;
-{
-  $Net::Appliance::Session::APIv2::VERSION = '3.112510';
+BEGIN {
+  $Net::Appliance::Session::APIv2::VERSION = '3.112600';
 }
 
 use Moose;

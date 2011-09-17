@@ -16,3 +16,4 @@ t/author-11_route_server_v2.t
 t/author-20_local_device.t
 t/author-21_local_device_v2.t
 t/author-30_local_device_ssh.t
+t/author-40_local_device_ssh_extra.t
