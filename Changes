@@ -1,3 +1,8 @@
+3.112610  2011-09-18 10:42:28 Europe/London
+
+  * Add more tests for found bugs
+  * Add note to POD about terminal width (Mathias)
+
 3.112600  2011-09-17 14:24:53 Europe/London
 
   * Add test for pipe in command (V. Foitzik)

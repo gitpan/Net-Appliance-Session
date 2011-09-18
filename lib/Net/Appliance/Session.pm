@@ -1,6 +1,6 @@
 package Net::Appliance::Session;
 BEGIN {
-  $Net::Appliance::Session::VERSION = '3.112600';
+  $Net::Appliance::Session::VERSION = '3.112610';
 }
 
 use Moose;
@@ -129,7 +129,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-version 3.112600
+version 3.112610
 
 =head1 IMPORTANT NOTE ABOUT UPGRADING FROM VERSION 2.x
 
@@ -331,6 +331,13 @@ in the phrasebook and issued via the C<< $s->macro($name) >> method call. See
 the L<Phrasebook|Net::CLI::Interact::Phrasebook> and
 L<Cookbook|Net::CLI::Interact::Manual::Cookbook> manual pages for further
 details.
+
+If you receive response text with a "mangled" copy of the issued command at
+the start, then it's likely you need to set the terminal width. This prevents
+the connected device from line-wrapping long commands. Issue something like:
+
+ $s->begin_privileged;
+ $s->cmd('terminal width 512');
 
 =head2 close
 

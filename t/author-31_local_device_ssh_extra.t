@@ -17,6 +17,7 @@ BEGIN {
 
 use strict; use warnings FATAL => 'all';
 use Test::More 0.88;
+#use Data::Dumper;
 
 BEGIN { use_ok( 'Net::Appliance::Session') }
 
@@ -34,19 +35,32 @@ my $s = new_ok( 'Net::Appliance::Session' => [{
     },
 }]);
 
-my @out = ();
+my @lines = ();
 ok( $s->connect({
     username => 'Cisco',
     password => ($ENV{IOS_PASS} || 'letmein'),
 }), 'connected' );
 
 # reported bug about using pipe command
-ok( $s->cmd('show ver'), 'ran show ver' );
-
 ok( $s->cmd('show ver | i PCA'), 'ran show ver - pipe for PCA' );
-cmp_ok( (scalar $s->last_response), '=', 2, 'two lines of ver');
+@lines = $s->last_response;
+#print Dumper \@lines;
+cmp_ok( (scalar @lines), '==', 2, 'two lines of ver' );
+unlike( scalar $s->cmd('show ver | i Processor'), qr/^\|/, 'no pipe at start of output' );
 
-unlike ( scalar $s->cmd('show ver | i Processor'), qr/^\|/, 'no pipe at start of output' );
+# bug about stitching together of output
+ok( $s->cmd('show ver'), 'ran show ver' );
+@lines = $s->last_response;
+#print Dumper \@lines;
+cmp_ok( (scalar @lines), '==', 47, '47 lines of ver' );
+
+# reported bug about control characters affecting number of lines
+ok( $s->begin_privileged, 'move to privileged mode' );
+ok( eval{$s->cmd('terminal width 512');1}, 'set terminal width' );
+ok( $s->cmd('verify /md5 flash:c1140-k9w7-mx.124-25d.JA/c1140-k9w7-mx.124-25d.JA 5c45e360eb702702f29c5120ef4200fd'), 'ran verify md5' );
+@lines = $s->last_response;
+#print Dumper \@lines;
+cmp_ok( (scalar @lines), '==', 2, 'two lines of verify' );
+
 ok( eval{$s->close;1}, 'disconnected' );
-
 done_testing;
