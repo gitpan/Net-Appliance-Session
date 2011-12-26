@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    version 3.112610
+    version 3.113600
 
 IMPORTANT NOTE ABOUT UPGRADING FROM VERSION 2.x
     Between version 2.x and 3.x of this module the programmer's interface
@@ -198,6 +198,10 @@ METHODS
     Once you have finished work with the device, call this method. It
     attempts to back out of any "privileged" or "configuration" mode you've
     entered, re-enable paging (unless suppressed) and then disconnect.
+
+    If a macro named "disconnect" exists in the loaded phrasebook then it's
+    called just before disconnection. This allows you to issue a command
+    such as "exit" to cleanly log out.
 
 CONFIGURATION
     Each of the entries below may either be passed as a parameter in the
