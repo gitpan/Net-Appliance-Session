@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Transport;
 {
-  $Net::Appliance::Session::Transport::VERSION = '3.113600';
+  $Net::Appliance::Session::Transport::VERSION = '3.113610';
 }
 
 {
@@ -40,6 +40,10 @@ sub connect {
         my $has = 'has_' . $slot;
         my $set = 'set_' . $slot;
         $self->$set($options->$slot) if $options->$has;
+    }
+
+    if ($self->nci->transport->is_win32 and $self->has_password) {
+        $self->set_password($self->get_password . $self->nci->transport->ors);
     }
 
     # SSH transport takes a username if we have one

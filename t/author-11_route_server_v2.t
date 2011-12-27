@@ -13,7 +13,7 @@ use Test::More 0.88;
 
 BEGIN {
   if ($^O eq 'MSWin32') {
-    Test::More::plan(skip_all => 'these tests are for Win32 systems');
+    Test::More::plan(skip_all => 'these tests are not for Win32 systems');
   }
 }
 
@@ -34,6 +34,6 @@ ok( $s->cmd('show ip bgp 163.1.0.0/16'), 'ran show ip bgp 163.1.0.0/16' );
 like( $s->last_prompt, qr/\w+ ?>$/, 'command ran and last_prompt looks ok' );
 
 my @out = $s->last_response;
-cmp_ok( scalar @out, '>=', 5, 'sensible number of lines in the command output');
+cmp_ok( scalar @out, '==', 15, 'sensible number of lines in the command output');
 
 done_testing;

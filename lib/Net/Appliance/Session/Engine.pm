@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Engine;
 {
-  $Net::Appliance::Session::Engine::VERSION = '3.113600';
+  $Net::Appliance::Session::Engine::VERSION = '3.113610';
 }
 
 use Moose::Role;

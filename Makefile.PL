@@ -9,27 +9,29 @@ use ExtUtils::MakeMaker 6.30;
 
 
 my %WriteMakefileArgs = (
-  'ABSTRACT' => 'Run command-line sessions to network appliances',
-  'AUTHOR' => 'Oliver Gorwits <oliver@cpan.org>',
-  'BUILD_REQUIRES' => {
-    'Test::More' => '0.88'
+  "ABSTRACT" => "Run command-line sessions to network appliances",
+  "AUTHOR" => "Oliver Gorwits <oliver\@cpan.org>",
+  "BUILD_REQUIRES" => {
+    "Test::More" => "0.88",
+    "strict" => 0,
+    "warnings" => 0
   },
-  'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.30'
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30"
   },
-  'DISTNAME' => 'Net-Appliance-Session',
-  'EXE_FILES' => [],
-  'LICENSE' => 'perl',
-  'NAME' => 'Net::Appliance::Session',
-  'PREREQ_PM' => {
-    'Moose' => '0',
-    'Moose::Role' => '0',
-    'Net::CLI::Interact' => '0',
-    'overload' => '0'
+  "DISTNAME" => "Net-Appliance-Session",
+  "EXE_FILES" => [],
+  "LICENSE" => "perl",
+  "NAME" => "Net::Appliance::Session",
+  "PREREQ_PM" => {
+    "Moose" => 0,
+    "Moose::Role" => 0,
+    "Net::CLI::Interact" => 0,
+    "overload" => 0
   },
-  'VERSION' => '3.113600',
-  'test' => {
-    'TESTS' => 't/*.t'
+  "VERSION" => "3.113610",
+  "test" => {
+    "TESTS" => "t/*.t"
   }
 );
 

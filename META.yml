@@ -4,10 +4,12 @@ author:
   - 'Oliver Gorwits <oliver@cpan.org>'
 build_requires:
   Test::More: 0.88
+  strict: 0
+  warnings: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.200013, CPAN::Meta::Converter version 2.112150'
+generated_by: 'Dist::Zilla version 4.300005, CPAN::Meta::Converter version 2.112621'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -22,4 +24,4 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Net-Appliance-Session
   homepage: https://github.com/ollyg/Net-Appliance-Session/wiki
   repository: git://github.com/ollyg/Net-Appliance-Session.git
-version: 3.113600
+version: 3.113610
