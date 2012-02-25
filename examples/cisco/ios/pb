@@ -1,0 +1,12 @@
+# prompt err_string
+#     match /% ?(?:Error|Type "[^?]+\?"|(?:Incomplete|Unknown) command|Invalid input)/
+
+#macro paging
+#    send terminal length %s
+
+macro run_to_flash
+    send copy running-config flash:%s
+    match /Destination filename \[\w+\]\?/
+    send ''
+    match /Do you want to over write\? \[confirm\]/
+    send ''

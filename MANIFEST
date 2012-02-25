@@ -5,7 +5,9 @@ META.json
 META.yml
 Makefile.PL
 README
+examples/cisco/ios/pb
 examples/example-1.pl
+examples/test.pl
 lib/Net/Appliance/Session.pm
 lib/Net/Appliance/Session/APIv2.pm
 lib/Net/Appliance/Session/Engine.pm

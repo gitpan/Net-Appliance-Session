@@ -3,7 +3,7 @@ NAME
     appliances
 
 VERSION
-    version 3.113610
+    version 3.120560
 
 IMPORTANT NOTE ABOUT UPGRADING FROM VERSION 2.x
     Between version 2.x and 3.x of this module the programmer's interface
@@ -279,7 +279,7 @@ AUTHOR
     Oliver Gorwits <oliver@cpan.org>
 
 COPYRIGHT AND LICENSE
-    This software is copyright (c) 2011 by Oliver Gorwits.
+    This software is copyright (c) 2012 by Oliver Gorwits.
 
     This is free software; you can redistribute it and/or modify it under
     the same terms as the Perl 5 programming language system itself.
