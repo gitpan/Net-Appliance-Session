@@ -12,9 +12,7 @@ my %WriteMakefileArgs = (
   'ABSTRACT' => 'Run command-line sessions to network appliances',
   'AUTHOR' => 'Oliver Gorwits <oliver@cpan.org>',
   'BUILD_REQUIRES' => {
-    'Test::More' => '0.88',
-    'strict' => '0',
-    'warnings' => '0'
+    'Test::More' => '0.88'
   },
   'CONFIGURE_REQUIRES' => {
     'ExtUtils::MakeMaker' => '6.30'
@@ -29,7 +27,7 @@ my %WriteMakefileArgs = (
     'Net::CLI::Interact' => '0',
     'overload' => '0'
   },
-  'VERSION' => '3.120560',
+  'VERSION' => '3.120580_001',
   'test' => {
     'TESTS' => 't/*.t'
   }
