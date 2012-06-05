@@ -1,6 +1,6 @@
 package Net::Appliance::Session::Async;
 {
-  $Net::Appliance::Session::Async::VERSION = '3.120580_001';
+  $Net::Appliance::Session::Async::VERSION = '3.121570';
 }
 
 use Moose::Role;
@@ -11,6 +11,8 @@ sub put {
     return $self->nci->transport->put($cmd,
         ($opts->{no_ors} ? () : $self->nci->transport->ors));
 }
+
+sub say { return $_[0]->put( $_[1] ) }
 
 sub gather {
     my ($self, $opts) = @_;

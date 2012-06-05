@@ -1,6 +1,6 @@
 package Net::Appliance::Session;
 {
-  $Net::Appliance::Session::VERSION = '3.120580_001';
+  $Net::Appliance::Session::VERSION = '3.121570';
 }
 
 use Moose;
@@ -130,7 +130,7 @@ Net::Appliance::Session - Run command-line sessions to network appliances
 
 =head1 VERSION
 
-version 3.120580_001
+version 3.121570
 
 =head1 IMPORTANT NOTE ABOUT UPGRADING FROM VERSION 2.x
 
@@ -428,7 +428,7 @@ The standard, and recommended way to use this module is as above, whereby the
 application is blocked waiting for command response. It's also possible to
 send a command, and separately return to ask for output at a later time.
 
- $s->put('show clock');
+ $s->say('show clock');
 
 This will send the command C<show clock> to the connected device, followed by
 a newline character.
@@ -437,7 +437,11 @@ a newline character.
 
 This will gather and return output, with similar behaviour to C<cmd()>, above.
 That is, it blocks waiting for output and a prompt, will timeout, and accepts
-the same options. You can still use C<last_response> after calling C<gather>.
+the same options.
+
+You can still use C<last_response> after calling C<gather>, however be aware
+that the command (from C<say>) may be echoed at the start of the output,
+depending on device and connection transport.
 
 =head1 DIAGNOSTICS
 
