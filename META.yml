@@ -6,13 +6,17 @@ build_requires:
   Test::More: 0.88
 configure_requires:
   ExtUtils::MakeMaker: 6.30
-dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.300024, CPAN::Meta::Converter version 2.120921'
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.120921'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
 name: Net-Appliance-Session
+no_index:
+  directory:
+    - t
+    - inc
 requires:
   Cwd: 0
   Data::Dumper: 0
@@ -22,7 +26,7 @@ requires:
   Moo: 0
   Moo::Role: 0
   MooX::Types::MooseLike::Base: 0
-  Net::CLI::Interact: 2.131260
+  Net::CLI::Interact: 2.200000
   Sub::Quote: 0
   Term::ANSIColor: 0
   Term::ReadPassword: 0
@@ -31,8 +35,4 @@ requires:
   Try::Tiny: 0
   strict: 0
   warnings: 0
-resources:
-  bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Net-Appliance-Session
-  homepage: https://github.com/ollyg/Net-Appliance-Session/wiki
-  repository: git://github.com/ollyg/Net-Appliance-Session.git
-version: 4.142720
+version: 4.200000
